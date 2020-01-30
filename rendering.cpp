@@ -9,6 +9,10 @@
 
 const double PI = 3.14159265358979;
 
+
+
+
+
 void renderBoardVertices(sf::RenderWindow &window, Board board, 
                          double scaleX, double scaleY)
 {
@@ -32,6 +36,41 @@ void renderBoardVertices(sf::RenderWindow &window, Board board,
 		window.draw(vertexShape);
 	}
 }
+
+
+
+
+
+void renderTextVertices(sf::RenderWindow &window, Board board, 
+                        double scaleX, double scaleY)
+{
+	double windowSizeX = window.getSize().x;
+	double windowSizeY = window.getSize().y;
+	
+	sf::Font font;
+	if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"));
+
+	sf::Text text;
+	text.setFont(font);
+	text.setFillColor(sf::Color::Red);
+	text.setCharacterSize(20);
+	
+	vector<Vertex> vertices = board.getVertices();
+	
+	for (int i=0; i<vertices.size(); i++)
+	{
+		// vertex position in window
+		double x = windowSizeX/2 + vertices[i].getX() * scaleX;
+		double y = windowSizeY/2 + vertices[i].getY() * scaleY;
+		
+		text.setString(to_string(i));
+		text.setPosition(x,y);
+		window.draw(text);
+	}
+}
+
+
+
 
 void renderBoardEdges(sf::RenderWindow &window, Board board, 
                       double scaleX, double scaleY)
@@ -75,5 +114,56 @@ void renderBoardEdges(sf::RenderWindow &window, Board board,
 		}
 	}
 }
+
+
+
+
+
+
+void renderPawns(sf::RenderWindow &window, Board board, 
+                 double scaleX, double scaleY)
+{
+	double windowSizeX = window.getSize().x;
+	double windowSizeY = window.getSize().y;
+	
+	double pawnSize = 0.2;
+	sf::CircleShape pawnShape(pawnSize);
+	pawnShape.setScale(scaleX,scaleY);
+	
+	vector<Pawn> pawns = board.getPawns();
+	for (int i=0; i<pawns.size(); i++)
+	{
+		// associated vertex
+		int j = board.getVertexFromPawn(i);
+		Vertex vertex = board.getVertices()[j];
+		
+		// pawn position in window
+		double x = windowSizeX/2 + vertex.getX() * scaleX 
+		           - pawnSize * scaleX;
+		double y = windowSizeY/2 + vertex.getY() * scaleY 
+		           - pawnSize * scaleY;
+		
+		pawnShape.setPosition(sf::Vector2f(x,y));
+		
+		// color according to team
+		if (pawns[i].getTeam()==0)
+			pawnShape.setFillColor(sf::Color::Red);
+		else if (pawns[i].getTeam()==1)
+			pawnShape.setFillColor(sf::Color::Green);
+		else if (pawns[i].getTeam()==2)
+			pawnShape.setFillColor(sf::Color::Blue);
+		else if (pawns[i].getTeam()==3)
+			pawnShape.setFillColor(sf::Color::Yellow);
+		else if (pawns[i].getTeam()==4)
+			pawnShape.setFillColor(sf::Color::Magenta);
+		else if (pawns[i].getTeam()==5)
+			pawnShape.setFillColor(sf::Color::Cyan);
+		
+		window.draw(pawnShape);
+	}
+}
+
+
+
 
 #endif

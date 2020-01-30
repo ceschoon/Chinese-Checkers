@@ -12,14 +12,16 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-/// next on the toto list
-//	o	computation of second neighbours
-//	o	pawns and rendering
+/// next on the todo list
+//	o	Encapsulate board and correct interface form algorithms/play
 //	o	develop algorithm class with trivial diffusion algorithm
 //	o	end game detection
 //	o	random forward algorithm
 //	o	current best move algorithm
 //	o	statistics (number of moves, advancement tracking, game record)
+
+//// Alternative play modes:
+//	o	Manual game, pawns moved with mouse
 
 /// current minor problems:
 //	o	window resizing incorrect
@@ -37,7 +39,7 @@ int main()
 {
 	///////////////////////////// Game board ///////////////////////////////
 	
-	Hexagram board(3);
+	Hexagram board(6,3);
 	
 	/////////////////////////////// Window /////////////////////////////////
 	
@@ -68,6 +70,8 @@ int main()
 		window.clear(sf::Color::White);
 		renderBoardEdges(window,board,scaleX,scaleY);
 		renderBoardVertices(window,board,scaleX,scaleY);
+		//renderTextVertices(window,board,scaleX,scaleY);
+		renderPawns(window,board,scaleX,scaleY);
 		window.display();
 	}
 	
