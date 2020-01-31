@@ -13,7 +13,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	Encapsulate board and correct interface form algorithms/play
 //	o	develop algorithm class with trivial diffusion algorithm
 //	o	end game detection
 //	o	random forward algorithm
@@ -35,11 +34,18 @@
 
 using namespace std;
 
+void checkMoves();
+
 int main()
 {
 	///////////////////////////// Game board ///////////////////////////////
 	
 	Hexagram board(6,3);
+	
+	#ifdef DEBUG
+	cout << "== Checking moves and moves detection ==" << endl;
+	checkMoves();
+	#endif
 	
 	/////////////////////////////// Window /////////////////////////////////
 	
@@ -79,3 +85,50 @@ int main()
 	
 	return 0;
 }
+
+
+
+
+
+void checkMoves()
+{
+	Hexagram board(6,3);
+	
+	int ivertex = 5;
+	int ipawn = board.getPawnFromVertex(ivertex);
+	
+	cout << "available direct moves from vertex " << ivertex << ": " << endl;
+	for (int ivertex2 : board.availableMovesDirect(ivertex))
+		cout << ivertex2 << " ";
+	cout << endl;
+	
+	cout << "available hopping moves from vertex " << ivertex << ": " << endl;
+	for (int ivertex2 : board.availableMovesHopping(ivertex))
+		cout << ivertex2 << " ";
+	cout << endl;
+	
+	ipawn = board.getPawnFromVertex(ivertex);
+	cout << "move pawn from vertex " << ivertex;
+	ivertex = 8;
+	cout << " to vertex " << ivertex << ": ";
+	cout << board.move(ipawn,ivertex) << endl;
+	
+	ipawn = board.getPawnFromVertex(ivertex);
+	cout << "move pawn from vertex " << ivertex;
+	ivertex = 11;
+	cout << " to vertex " << ivertex << ": ";
+	cout << board.move(ipawn,ivertex) << endl;
+	
+	ivertex = 3;
+	cout << "available direct moves from vertex " << ivertex << ": " << endl;
+	for (int ivertex2 : board.availableMovesDirect(ivertex))
+		cout << ivertex2 << " ";
+	cout << endl;
+	
+	cout << "available hopping moves from vertex " << ivertex << ": " << endl;
+	for (int ivertex2 : board.availableMovesHopping(ivertex))
+		cout << ivertex2 << " ";
+	cout << endl;
+}
+
+

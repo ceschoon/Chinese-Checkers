@@ -1,8 +1,10 @@
-#include <math.h>
 #include <iostream>
+#include <math.h>
 #include "Board.h"
 
 using namespace std;
+
+const double PI = 3.14159265358979;
 
 
 
@@ -224,9 +226,166 @@ void Hexagram::computeNeighbours2()
 
 
 
-// Placing of pawns on the graph of vertices
-// The placement depends on the number of teams. We divide the problem into
-// placing one team at the time. We repeat according to the number of teams.
+
+// we identify the branch with a line that seperates the branch from
+// the rest of the hexagram
+
+vector<int> Hexagram::verticesOnBranch(int branch)
+{
+	vector<int> verticesSelected;
+	
+	for (int i=0; i<vertices_.size(); i++)
+	{
+		// check if vertex on the right branch, the condition is branch-
+		// dependent
+		
+		double x = vertices_[i].getX();
+		double y = vertices_[i].getY();
+		double small_number = 1e-8;
+		
+		if (branch==0)
+		{
+			double a = 0;
+			double b = -sqrt(3)/2*size_;
+			
+			if (y>a*x+b-small_number) continue;
+		}
+		else if (branch==1)
+		{
+			double a = sqrt(3);
+			double b = -sqrt(3)*size_;
+			
+			if (y>a*x+b-small_number) continue;
+		}
+		else if (branch==2)
+		{
+			double a = -sqrt(3);
+			double b = sqrt(3)*size_;
+			
+			if (y<a*x+b+small_number) continue;
+		}
+		else if (branch==3)
+		{
+			double a = 0;
+			double b = sqrt(3)/2*size_;
+			
+			if (y<a*x+b+small_number) continue;
+		}
+		else if (branch==4)
+		{
+			double a = sqrt(3);
+			double b = sqrt(3)*size_;
+			
+			if (y<a*x+b+small_number) continue;
+		}
+		else if (branch==5)
+		{
+			double a = -sqrt(3);
+			double b = -sqrt(3)*size_;
+			
+			if (y>a*x+b-small_number) continue;
+		}
+		
+		// if we arrive at this stage, this means that the vertex is on the
+		// right branch
+		
+		verticesSelected.push_back(i);
+	}
+	
+	return verticesSelected;
+}
+
+
+
+
+
+void Hexagram::attributeHomeToTeams()
+{
+	// clear
+	homes_.empty();
+	
+	// attribute homes according to number of teams
+	if (nTeams_==1) 
+	{
+		homes_.push_back(verticesOnBranch(0));
+	}
+	else if (nTeams_==2) 
+	{
+		homes_.push_back(verticesOnBranch(0));
+		homes_.push_back(verticesOnBranch(3));
+	}
+	else if (nTeams_==3) 
+	{
+		homes_.push_back(verticesOnBranch(0));
+		homes_.push_back(verticesOnBranch(2));
+		homes_.push_back(verticesOnBranch(4));
+	}
+	else if (nTeams_==4) 
+	{
+		homes_.push_back(verticesOnBranch(0));
+		homes_.push_back(verticesOnBranch(1));
+		homes_.push_back(verticesOnBranch(3));
+		homes_.push_back(verticesOnBranch(4));
+	}
+	else if (nTeams_==6) 
+	{
+		homes_.push_back(verticesOnBranch(0));
+		homes_.push_back(verticesOnBranch(1));
+		homes_.push_back(verticesOnBranch(2));
+		homes_.push_back(verticesOnBranch(3));
+		homes_.push_back(verticesOnBranch(4));
+		homes_.push_back(verticesOnBranch(5));
+	}
+}
+
+
+
+
+
+
+void Hexagram::attributeTargetToTeams()
+{
+	// clear
+	targets_.empty();
+	
+	// attribute homes according to number of teams
+	if (nTeams_==1) 
+	{
+		targets_.push_back(verticesOnBranch(3));
+	}
+	else if (nTeams_==2) 
+	{
+		targets_.push_back(verticesOnBranch(3));
+		targets_.push_back(verticesOnBranch(0));
+	}
+	else if (nTeams_==3) 
+	{
+		targets_.push_back(verticesOnBranch(3));
+		targets_.push_back(verticesOnBranch(5));
+		targets_.push_back(verticesOnBranch(1));
+	}
+	else if (nTeams_==4) 
+	{
+		targets_.push_back(verticesOnBranch(3));
+		targets_.push_back(verticesOnBranch(4));
+		targets_.push_back(verticesOnBranch(0));
+		targets_.push_back(verticesOnBranch(1));
+	}
+	else if (nTeams_==6) 
+	{
+		targets_.push_back(verticesOnBranch(3));
+		targets_.push_back(verticesOnBranch(4));
+		targets_.push_back(verticesOnBranch(5));
+		targets_.push_back(verticesOnBranch(0));
+		targets_.push_back(verticesOnBranch(1));
+		targets_.push_back(verticesOnBranch(2));
+	}
+}
+
+
+
+
+
 
 void Hexagram::placePawnsOnVertices()
 {
@@ -240,114 +399,21 @@ void Hexagram::placePawnsOnVertices()
 	for (int i=0; i<pawns_.size(); i++)
 		pawnToVertex_.push_back(-1);
 	
-	// place pawns according to number of teams
+	// place pawns on their home vertices
 	
-	if (nTeams_==1) 
+	for (int i=0; i<pawns_.size(); i++)
 	{
-		placeTeamOnBranch(0,0);
-	}
-	else if (nTeams_==2) 
-	{
-		placeTeamOnBranch(0,0);
-		placeTeamOnBranch(1,3);
-	}
-	else if (nTeams_==3) 
-	{
-		placeTeamOnBranch(0,0);
-		placeTeamOnBranch(1,2);
-		placeTeamOnBranch(2,4);
-	}
-	else if (nTeams_==4) 
-	{
-		placeTeamOnBranch(0,0);
-		placeTeamOnBranch(0,1);
-		placeTeamOnBranch(0,3);
-		placeTeamOnBranch(0,4);
-	}
-	else if (nTeams_==6) 
-	{
-		placeTeamOnBranch(0,0);
-		placeTeamOnBranch(1,1);
-		placeTeamOnBranch(2,2);
-		placeTeamOnBranch(3,3);
-		placeTeamOnBranch(4,4);
-		placeTeamOnBranch(5,5);
-	}
-}
-
-void Hexagram::placeTeamOnBranch(int team, int branch)
-{
-	for (int j=0; j<pawns_.size(); j++)
-	{
-		Pawn pawn = pawns_[j];
+		int team = pawns_[i].getTeam();
+		vector<int> homeVertices = homes_[team];
 		
-		// check if pawn in right team
-		if (pawn.getTeam()!=team) continue;
-		
-		// find a free vertex on the right branch
-		// we identify the branch with a line that seperates the branch from
-		// the rest of the haxegram
-		
-		for (int i=0; i<vertices_.size(); i++)
+		for (int j=0; j<homeVertices.size(); j++)
 		{
 			// check if vertex free
-			if (vertexToPawn_[i]>=0) continue;
+			if (vertexToPawn_[homeVertices[j]]>=0) continue;
 			
-			// check if vertex on the right branch, the condition is branch-
-			// dependent
-			double x = vertices_[i].getX();
-			double y = vertices_[i].getY();
-			double small_number = 1e-8;
-			
-			if (branch==0)
-			{
-				double a = 0;
-				double b = -sqrt(3)/2*size_;
-				
-				if (y>a*x+b-small_number) continue;
-			}
-			else if (branch==1)
-			{
-				double a = sqrt(3);
-				double b = -sqrt(3)*size_;
-				
-				if (y>a*x+b-small_number) continue;
-			}
-			else if (branch==2)
-			{
-				double a = -sqrt(3);
-				double b = sqrt(3)*size_;
-				
-				if (y<a*x+b+small_number) continue;
-			}
-			else if (branch==3)
-			{
-				double a = 0;
-				double b = sqrt(3)/2*size_;
-				
-				if (y<a*x+b+small_number) continue;
-			}
-			else if (branch==4)
-			{
-				double a = sqrt(3);
-				double b = sqrt(3)*size_;
-				
-				if (y<a*x+b+small_number) continue;
-			}
-			else if (branch==5)
-			{
-				double a = -sqrt(3);
-				double b = -sqrt(3)*size_;
-				
-				if (y>a*x+b-small_number) continue;
-			}
-			
-			// if we arrive at this stage, this means we can place the pawn
-			// at the current vertex
-			
-			vertexToPawn_[i] = j;
-			pawnToVertex_[j] = i;
-			
+			// if it is, place pawn
+			vertexToPawn_[homeVertices[j]] = i;
+			pawnToVertex_[i] = homeVertices[j];
 			break;
 		}
 	}
@@ -357,3 +423,230 @@ void Hexagram::placeTeamOnBranch(int team, int branch)
 
 
 
+
+void Board::checkPawnPlacement()
+{
+	// check home and target attribution
+	clog << "-----------------" << endl;
+	for (int team=0; team<nTeams_; team++)
+	{
+		clog << "team=" << team << endl;
+		for (int vertex: homes_[team]) clog << vertex << " ";
+		clog << endl;
+		for (int vertex: targets_[team]) clog << vertex << " ";
+		clog << endl;
+	}
+	
+	// check vertices to pawn association
+	clog << "-----------------" << endl;
+	clog << "from vertices=" << " ";
+	for (int vertex=0; vertex<vertices_.size(); vertex++) 
+		clog << vertex << " ";
+	clog << endl;
+	clog << "to pawns=" << " ";
+	for (int vertex=0; vertex<vertices_.size(); vertex++)
+		clog << vertexToPawn_[vertex] << " ";
+	clog << endl;
+	clog << "from pawns=" << " ";
+	for (int pawn=0; pawn<pawns_.size(); pawn++) 
+		clog << pawn << " ";
+	clog << endl;
+	clog << "to vertices=" << " ";
+	for (int pawn=0; pawn<pawns_.size(); pawn++)
+		clog << pawnToVertex_[pawn] << " ";
+	clog << endl;
+}
+
+
+
+
+
+double angle(double x1, double y1, double x2, double y2)
+{
+	double angle12;
+	if ((x2-x1)==0 && (y2-y1)>0) angle12 = 90;
+	else if ((x2-x1)==0 && (y2-y1)<0) angle12 = -90;
+	else if ((x2-x1)>0) angle12 = atan((y2-y1)/(x2-x1)) * 180/PI;
+	else if ((x2-x1)<0) angle12 = atan((y2-y1)/(x2-x1)) * 180/PI + 180;
+	while (angle12<0) angle12+=360;
+	while (angle12>=360) angle12-=360;
+	
+	return angle12;
+}
+
+// On the triangular lattice of the hexagram, the distance is the minimum
+// number of steps vertex to vertex. These steps can be taken along three
+// axes (lines with angles 0,60,120). We can easily see that the shortest
+// path is taken by moving along the lines which angle is closest to the
+// angle between the two points.
+
+int Hexagram::distance(Vertex vertex1, Vertex vertex2)
+{
+	double small_number = 1e-8;
+	
+	// positions of vertices
+	double x1 = vertex1.getX();
+	double y1 = vertex1.getY();
+	double x2 = vertex2.getX();
+	double y2 = vertex2.getY();
+	
+	// compute angle and find the axis with closest angle
+	double angle12 = angle(x1,y1,x2,y2);
+	double angleAxis1 = int(angle12/60)*60.0;
+	double angleAxis2 = int(angle12/60)*60.0+60.0;
+	
+	// basis vectors for steps along the two axis
+	double x3 = cos(angleAxis1*PI/180)*1.0;
+	double y3 = sin(angleAxis1*PI/180)*1.0;
+	double x4 = cos(angleAxis2*PI/180)*1.0;
+	double y4 = sin(angleAxis2*PI/180)*1.0;
+	
+	// find number of steps in each direction
+	double det = x3*y4-x4*y3;
+	double coord3 = 1/det*( y4*(x2-x1) - x4*(y2-y1));
+	double coord4 = 1/det*(-y3*(x2-x1) + x3*(y2-y1));
+	int numSteps3 = int(abs(coord3)+small_number);
+	int numSteps4 = int(abs(coord4)+small_number);
+	
+	return numSteps3+numSteps4;
+}
+
+
+
+
+// Sum the distances between home and target vertices. Also compute the 
+// current distance travelled by the pawns and return the fraction of the 
+// two distances.
+
+double Board::progressFromDistance(int team)
+{
+	// vertices
+	vector<int> homeVertices = homes_[team];
+	vector<int> targetVertices = targets_[team];
+	vector<int> pawnVertices;
+	
+	// compute vertices of the right team's pawns
+	for (int i=0; i<pawns_.size(); i++)
+		if (pawns_[i].getTeam()==team)
+			pawnVertices.push_back(pawnToVertex_[i]);
+	
+	// compute the total distance between home and target
+	int distHomeToTarget = 0;
+	for (int i=0; i<homeVertices.size(); i++)
+		distHomeToTarget += distance(vertices_[homeVertices[i]], 
+		                             vertices_[targetVertices[i]]);
+	
+	// compute the total distance between home and pawns
+	int distHomeToPawns = 0;
+	for (int i=0; i<homeVertices.size(); i++)
+		distHomeToTarget += distance(vertices_[homeVertices[i]], 
+		                             vertices_[pawnVertices[i]]);
+	
+	return double(distHomeToPawns)/distHomeToTarget;
+}
+
+
+
+
+// Move a Pawn to a detination Vertex.
+// Returns 0 and performs the move if it is valid
+// Returns 1 if the move is incorrect
+// Returns 2 if the pawn or vertex doesn't exist
+
+int Board::move(int ipawn, int ivertex)
+{
+	// Check if pawn and vertex exist
+	if (ipawn >= pawns_.size()) return 2;
+	if (ivertex >= vertices_.size()) return 2;
+	
+	// Check if move is a valid direct move
+	int ivertexCurrent = pawnToVertex_[ipawn];
+	bool inList1 = false;
+	for (int ivertex2 : availableMovesDirect(ivertexCurrent))
+	{
+		if (ivertex2==ivertex)
+		{
+			inList1 = true;
+			break;
+		}
+	}
+	
+	// Check if move is a valid hopping move
+	bool inList2 = false;
+	for (int ivertex2 : availableMovesHopping(ivertexCurrent))
+	{
+		if (ivertex2==ivertexCurrent)
+		{
+			inList2 = true;
+			break;
+		}
+	}
+	if (!inList1 && !inList2) return 1;
+	
+	// If we arrive to this point, then the move is valid
+	// We thus perform the move
+	vertexToPawn_[ivertexCurrent] = -1;
+	vertexToPawn_[ivertex] = ipawn;
+	pawnToVertex_[ipawn] = ivertex;
+	
+	return 0;
+}
+
+
+
+
+// List of all possible direct moves from given vertex (no hopping)
+
+vector<int> Board::availableMovesDirect(int ivertex)
+{
+	vector<int> destinations;
+	
+	// Add all free neighbours
+	for (int ivertex2 : vertices_[ivertex].getNeighbours())
+		if (vertexToPawn_[ivertex2]<0) destinations.push_back(ivertex2);
+	
+	return destinations;
+}
+
+
+
+
+
+// List of all possible moves by hopping, from a given vertex.
+// Note that this is a recursive search. This is why we need to forbid the
+// selection of the vertex that we are coming from (default=-1).
+
+vector<int> Board::availableMovesHopping(int ivertex, int ivertexForbidden)
+{
+	vector<int> destinations;
+	vector<int> neighbours = vertices_[ivertex].getNeighbours();
+	vector<int> neighbours2 = vertices_[ivertex].getNeighbours2();
+	
+	// Add all second neighbours and their own available hopping moves
+	for (int i=0; i<neighbours.size(); i++)
+	{
+		int ivertex1 = neighbours[i];
+		int ivertex2 = neighbours2[i];
+		
+		if (vertexToPawn_[ivertex1]>=0 && vertexToPawn_[ivertex2]<0 &&
+		    ivertex2!=ivertexForbidden)
+		{
+			destinations.push_back(ivertex2);
+			
+			for (int ivertex3 : availableMovesHopping(ivertex2, ivertex))
+				destinations.push_back(ivertex3);
+		}
+	}
+	
+	// Clear multiplicities
+	vector<int> destinations2;
+	for (int ivertex : destinations)
+	{
+		bool alreadyIn = false;
+		for (int ivertex2 : destinations2)
+			if (ivertex2 == ivertex) alreadyIn = true;
+		if (!alreadyIn) destinations2.push_back(ivertex);
+	}
+	
+	return destinations;
+}

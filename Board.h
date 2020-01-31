@@ -29,9 +29,7 @@ class Vertex
 		double x_;
 		double y_;
 		vector<int> neighbours_;
-		vector<int> weights_;
 		vector<int> neighbours2_;
-		vector<int> weights2_;
 };
 
 
@@ -43,16 +41,10 @@ class Pawn
 	public: 
 		Pawn(int team) : team_(team) {;}
 		
-		//Vertex getVertex() {return vertex_;}
 		int getTeam() {return team_;}
-		
-		//void setVertex(Vertex vertex) {vertex_ = vertex;}
 	
 	protected:
-		//Vertex vertex_;
 		int team_;
-		//int home_; // identifier for home location
-		//int target_; // identifier for target location
 };
 
 
@@ -65,9 +57,20 @@ class Board
 	public: 
 		Board(int nTeams, int nPawnsPerTeam) : nTeams_(nTeams)
 		{
+			// create pawns
 			for (int i=0; i<nTeams; i++)
 				for (int j=0; j<nPawnsPerTeam; j++)
 					pawns_.push_back(Pawn(i));
+			
+			// contruct graph
+			generateVertices();
+			computeNeighbours();
+			computeNeighbours2();
+			
+			// place pawns on graph
+			attributeHomeToTeams();
+			attributeTargetToTeams();
+			placePawnsOnVertices();
 		}
 		
 		vector<Vertex> getVertices() {return vertices_;}
@@ -75,13 +78,39 @@ class Board
 		
 		int getVertexFromPawn(int ipawn) {return pawnToVertex_[ipawn];}
 		int getPawnFromVertex(int ivertex) {return vertexToPawn_[ivertex];}
+		
+		vector<int> getHomeOfTeam(int team) {return homes_[team];}
+		vector<int> getTargetOfTeam(int team) {return targets_[team];}
+		
+		int distance(Vertex vertex1, Vertex vertex2) {return -1;} // to override
+		double progressFromDistance(int team);
+		
+		int move(int ipawn, int ivertex);
+		vector<int> availableMovesDirect(int ivertex);
+		vector<int> availableMovesHopping(int ivertex, int ivertexForbidden=-1);
 	
 	protected:
+		// construction of graph (to override)
+		// -> Rewrite the computation of neighbours with distance and 
+		//    alignment functions?
+		void generateVertices() {;}
+		void computeNeighbours() {;}
+		void computeNeighbours2() {;}
+		
+		// place pawns on graph (to override)
+		void attributeHomeToTeams() {;}
+		void attributeTargetToTeams() {;}
+		void placePawnsOnVertices() {;}
+		void checkPawnPlacement();
+		
+		// member variables
 		int nTeams_;
 		vector<Vertex> vertices_;
 		vector<Pawn> pawns_;
-		vector<int> pawnToVertex_; // index of pawn at vertex
+		vector<int> pawnToVertex_;    // index of pawn at given vertex
 		vector<int> vertexToPawn_;
+		vector<vector<int>> homes_;   // list of home vertices for each team
+		vector<vector<int>> targets_;
 };
 
 
@@ -98,24 +127,40 @@ class Hexagram : public Board
 			assert(nTeams<=6);
 			assert(nTeams!=5);
 			
+			// contruct graph
 			generateVertices();
 			computeNeighbours();
 			computeNeighbours2();
+			
+			// place pawns on graph
+			attributeHomeToTeams();
+			attributeTargetToTeams();
 			placePawnsOnVertices();
+			
+			#ifdef DEBUG
+			cout << "== Checking pawn placement in Hexagram class constructor ==" << endl;
+			checkPawnPlacement();
+			#endif
 		}
-		
-		void generateVertices();
-		void computeNeighbours();
-		void computeNeighbours2();
-		void placePawnsOnVertices();
 		
 		int getNumPawnsPerTeam(){return size_*(size_+1)/2;}
 		double getTotalSizeX() {return 2*sqrt(3)*size_;}
 		double getTotalSizeY() {return 2*sqrt(3)*size_;}
+		vector<int> verticesOnBranch(int branch);
+		int distance(Vertex vertex1, Vertex vertex2);
 		
 	protected:
-		void placeTeamOnBranch(int, int);
+		// construction of graph
+		void generateVertices();
+		void computeNeighbours();
+		void computeNeighbours2();
 		
+		// place pawns on graph
+		void attributeHomeToTeams();
+		void attributeTargetToTeams();
+		void placePawnsOnVertices();
+		
+		// member variables
 		int size_;
 };
 
