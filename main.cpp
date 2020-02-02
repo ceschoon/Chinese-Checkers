@@ -50,11 +50,6 @@ int main()
 	
 	Hexagram board(6,3);
 	
-	#ifdef DEBUG
-	//cout << "== Checking moves and moves detection ==" << endl;
-	//checkMoves(recordFile2);
-	#endif
-	
 	/////////////////////////////// Window /////////////////////////////////
 	
 	sf::RenderWindow window(sf::VideoMode(640,640),"Chinese Checkers");
@@ -232,6 +227,7 @@ int main()
 		#endif
 		renderPawns(window,board,scaleX,scaleY,pawnSelected);
 		renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
+		renderWinners(window,board,scaleX,scaleY);
 		window.display();
 		
 		///////////////////////////// Misc. ////////////////////////////////
@@ -248,51 +244,6 @@ int main()
 	////////////////////////////////////////////////////////////////////////
 	
 	return 0;
-}
-
-
-
-
-
-void checkMoves(ofstream &recordFile)
-{
-	Hexagram board(6,3);
-	
-	int ivertex = 5;
-	int ipawn = board.getPawnFromVertex(ivertex);
-	
-	cout << "available direct moves from vertex " << ivertex << ": " << endl;
-	for (int ivertex2 : board.availableMovesDirect(ivertex))
-		cout << ivertex2 << " ";
-	cout << endl;
-	
-	cout << "available hopping moves from vertex " << ivertex << ": " << endl;
-	for (int ivertex2 : board.availableMovesHopping(ivertex))
-		cout << ivertex2 << " ";
-	cout << endl;
-	
-	ipawn = board.getPawnFromVertex(ivertex);
-	cout << "move pawn from vertex " << ivertex;
-	ivertex = 8;
-	cout << " to vertex " << ivertex << ": ";
-	cout << board.move(ipawn,ivertex,recordFile) << endl;
-	
-	ipawn = board.getPawnFromVertex(ivertex);
-	cout << "move pawn from vertex " << ivertex;
-	ivertex = 11;
-	cout << " to vertex " << ivertex << ": ";
-	cout << board.move(ipawn,ivertex,recordFile) << endl;
-	
-	ivertex = 3;
-	cout << "available direct moves from vertex " << ivertex << ": " << endl;
-	for (int ivertex2 : board.availableMovesDirect(ivertex))
-		cout << ivertex2 << " ";
-	cout << endl;
-	
-	cout << "available hopping moves from vertex " << ivertex << ": " << endl;
-	for (int ivertex2 : board.availableMovesHopping(ivertex))
-		cout << ivertex2 << " ";
-	cout << endl;
 }
 
 

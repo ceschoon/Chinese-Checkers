@@ -72,6 +72,9 @@ class Board
 			attributeHomeToTeams();
 			attributeTargetToTeams();
 			placePawnsOnVertices();
+			
+			// other
+			winningOrder_ = vector<int>(nTeams,-1);
 		}
 		
 		int getNTeams() {return nTeams_;}
@@ -83,6 +86,7 @@ class Board
 		
 		vector<int> getHomeOfTeam(int team) {return homes_[team];}
 		vector<int> getTargetOfTeam(int team) {return targets_[team];}
+		vector<int> getWinningOrder() {return winningOrder_;}
 		
 		int distance(Vertex vertex1, Vertex vertex2) {return -1;} // to override
 		double progressFromDistance(int team);
@@ -120,6 +124,7 @@ class Board
 		vector<int> vertexToPawn_;
 		vector<vector<int>> homes_;   // list of home vertices for each team
 		vector<vector<int>> targets_;
+		vector<int> winningOrder_;
 };
 
 

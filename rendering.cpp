@@ -80,6 +80,7 @@ void renderTextVertices(sf::RenderWindow &window, Board board,
 
 
 
+
 void renderBoardEdges(sf::RenderWindow &window, Board board, 
                       double scaleX, double scaleY)
 {
@@ -223,6 +224,60 @@ void renderSelectedPawn(sf::RenderWindow &window, Board board,
 }
 
 
+
+
+void renderWinners(sf::RenderWindow &window, Hexagram board, 
+                   double scaleX, double scaleY)
+{
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering winning order ---" << endl;
+	#endif
+	
+	double windowSizeX = window.getSize().x;
+	double windowSizeY = window.getSize().y;
+	
+	sf::Font font;
+	if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"));
+
+	sf::Text text;
+	text.setFont(font);
+	text.setCharacterSize(20);
+	
+	vector<int> winningOrder = board.getWinningOrder();
+	int nTeams = winningOrder.size();
+	
+	for (int team=0; team<nTeams; team++)
+	{
+		// print if already won
+		if (winningOrder[team]>0)
+			text.setString(to_string(winningOrder[team]));
+		else
+			continue;
+		
+		// text position in window
+		double d = board.getTotalSizeX()/2;
+		double angle = PI/180*(360.0/nTeams*team+100);
+		double x = windowSizeX/2 + scaleX * d * cos(angle);
+		double y = windowSizeY/2 + scaleY * d * sin(angle);
+		text.setPosition(x,y);
+		
+		// color according to team
+		if (team==0)
+			text.setFillColor(sf::Color::Red);
+		else if (team==1)
+			text.setFillColor(sf::Color::Green);
+		else if (team==2)
+			text.setFillColor(sf::Color::Blue);
+		else if (team==3)
+			text.setFillColor(sf::Color::Yellow);
+		else if (team==4)
+			text.setFillColor(sf::Color::Magenta);
+		else if (team==5)
+			text.setFillColor(sf::Color::Cyan);
+			
+		window.draw(text);
+	}
+}
 
 
 #endif

@@ -601,6 +601,9 @@ int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 	cout << "ipawn = " << ipawn << " ivertex = " << ivertex << endl;
 	#endif
 	
+	// save info before we do the move
+	int nTeamsFinish0 = teamsOnTarget().size();
+	
 	// Check if pawn and vertex exist
 	if (ipawn >= pawns_.size()) return 2;
 	if (ivertex >= vertices_.size()) return 2;
@@ -650,6 +653,10 @@ int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 	// Record move in file
 	recordFile << "Move from vertex " << ivertexCurrent << " to " 
 	           << ivertex << endl;
+	
+	// Check if pawn's team just finished
+	if (teamsOnTarget().size() > nTeamsFinish0)
+		winningOrder_[team] = teamsOnTarget().size();
 	
 	return 0;
 }
