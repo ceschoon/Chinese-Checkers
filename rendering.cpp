@@ -16,6 +16,10 @@ const double PI = 3.14159265358979;
 void renderBoardVertices(sf::RenderWindow &window, Board board, 
                          double scaleX, double scaleY)
 {
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering board vertices ---" << endl;
+	#endif
+	
 	double windowSizeX = window.getSize().x;
 	double windowSizeY = window.getSize().y;
 	
@@ -44,6 +48,10 @@ void renderBoardVertices(sf::RenderWindow &window, Board board,
 void renderTextVertices(sf::RenderWindow &window, Board board, 
                         double scaleX, double scaleY)
 {
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering text on vertices ---" << endl;
+	#endif
+	
 	double windowSizeX = window.getSize().x;
 	double windowSizeY = window.getSize().y;
 	
@@ -75,6 +83,10 @@ void renderTextVertices(sf::RenderWindow &window, Board board,
 void renderBoardEdges(sf::RenderWindow &window, Board board, 
                       double scaleX, double scaleY)
 {
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering board edges ---" << endl;
+	#endif
+	
 	double windowSizeX = window.getSize().x;
 	double windowSizeY = window.getSize().y;
 	
@@ -121,8 +133,12 @@ void renderBoardEdges(sf::RenderWindow &window, Board board,
 
 
 void renderPawns(sf::RenderWindow &window, Board board, 
-                 double scaleX, double scaleY)
+                 double scaleX, double scaleY, int pawnSelected=-1)
 {
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering pawns ---" << endl;
+	#endif
+	
 	double windowSizeX = window.getSize().x;
 	double windowSizeY = window.getSize().y;
 	
@@ -133,6 +149,9 @@ void renderPawns(sf::RenderWindow &window, Board board,
 	vector<Pawn> pawns = board.getPawns();
 	for (int i=0; i<pawns.size(); i++)
 	{
+		// do not draw selected pawn
+		if (i==pawnSelected) continue;
+		
 		// associated vertex
 		int j = board.getVertexFromPawn(i);
 		Vertex vertex = board.getVertices()[j];
@@ -161,6 +180,46 @@ void renderPawns(sf::RenderWindow &window, Board board,
 		
 		window.draw(pawnShape);
 	}
+}
+
+
+
+
+void renderSelectedPawn(sf::RenderWindow &window, Board board, 
+                        double scaleX, double scaleY, int pawnSelected)
+{
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering selected pawn ---" << endl;
+	#endif
+	
+	vector<Pawn> pawns = board.getPawns();
+	if (pawnSelected<0 && pawnSelected>=pawns.size()) return ;
+	
+	// pawn shape
+	double pawnSize = 0.2;
+	sf::CircleShape pawnShape(pawnSize);
+	pawnShape.setScale(scaleX,scaleY);
+	
+	// pawn position in window
+	double x = sf::Mouse::getPosition(window).x	- pawnSize * scaleX;
+	double y = sf::Mouse::getPosition(window).y	- pawnSize * scaleY;
+	pawnShape.setPosition(sf::Vector2f(x,y));
+	
+	// color according to team
+	if (pawns[pawnSelected].getTeam()==0)
+		pawnShape.setFillColor(sf::Color::Red);
+	else if (pawns[pawnSelected].getTeam()==1)
+		pawnShape.setFillColor(sf::Color::Green);
+	else if (pawns[pawnSelected].getTeam()==2)
+		pawnShape.setFillColor(sf::Color::Blue);
+	else if (pawns[pawnSelected].getTeam()==3)
+		pawnShape.setFillColor(sf::Color::Yellow);
+	else if (pawns[pawnSelected].getTeam()==4)
+		pawnShape.setFillColor(sf::Color::Magenta);
+	else if (pawns[pawnSelected].getTeam()==5)
+		pawnShape.setFillColor(sf::Color::Cyan);
+	
+	window.draw(pawnShape);
 }
 
 

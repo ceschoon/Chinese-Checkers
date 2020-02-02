@@ -22,6 +22,10 @@ void Hexagram::generateVertices()
 	// From the first edge, draw diagonals starting from each vertex to 
 	// the second edge
 	
+	#ifdef DEBUG
+	cout << "--- Generation of vertices ---" << endl;
+	#endif
+	
 	vertices_.clear();
 	double posX = - (1+1.0/2) * size_;
 	double posY = - sqrt(3)/2 * size_;
@@ -139,6 +143,10 @@ void Hexagram::generateVertices()
 
 void Hexagram::computeNeighbours()
 {
+	#ifdef DEBUG
+	cout << "--- First neighbours computation ---" << endl;
+	#endif
+	
 	for (int i=0; i<vertices_.size(); i++)
 	{
 		vector<int> neighbours;
@@ -176,6 +184,10 @@ void Hexagram::computeNeighbours()
 
 void Hexagram::computeNeighbours2()
 {
+	#ifdef DEBUG
+	cout << "--- Second neighbours computation ---" << endl;
+	#endif
+	
 	for (int i=0; i<vertices_.size(); i++)
 	{
 		vector<int> neighboursi1 = vertices_[i].getNeighbours();
@@ -232,6 +244,10 @@ void Hexagram::computeNeighbours2()
 
 vector<int> Hexagram::verticesOnBranch(int branch)
 {
+	#ifdef DEBUG
+	cout << "--- Computing vertices on branch ---" << endl;
+	#endif
+	
 	vector<int> verticesSelected;
 	
 	for (int i=0; i<vertices_.size(); i++)
@@ -301,6 +317,10 @@ vector<int> Hexagram::verticesOnBranch(int branch)
 
 void Hexagram::attributeHomeToTeams()
 {
+	#ifdef DEBUG
+	cout << "--- Attributiong homes to teams ---" << endl;
+	#endif
+	
 	// clear
 	homes_.empty();
 	
@@ -345,6 +365,10 @@ void Hexagram::attributeHomeToTeams()
 
 void Hexagram::attributeTargetToTeams()
 {
+	#ifdef DEBUG
+	cout << "--- Attributing targets to teams ---" << endl;
+	#endif
+	
 	// clear
 	targets_.empty();
 	
@@ -389,6 +413,10 @@ void Hexagram::attributeTargetToTeams()
 
 void Hexagram::placePawnsOnVertices()
 {
+	#ifdef DEBUG
+	cout << "--- Placing pawns on vertices ---" << endl;
+	#endif
+	
 	// clear vertex to pawn association
 	
 	vertexToPawn_.empty();
@@ -426,35 +454,39 @@ void Hexagram::placePawnsOnVertices()
 
 void Board::checkPawnPlacement()
 {
+	#ifdef DEBUG
+	cout << "--- Checking pawn placement ---" << endl;
+	#endif
+	
 	// check home and target attribution
-	clog << "-----------------" << endl;
+	cout << "-----------------" << endl;
 	for (int team=0; team<nTeams_; team++)
 	{
-		clog << "team=" << team << endl;
-		for (int vertex: homes_[team]) clog << vertex << " ";
-		clog << endl;
-		for (int vertex: targets_[team]) clog << vertex << " ";
-		clog << endl;
+		cout << "team=" << team << endl;
+		for (int vertex: homes_[team]) cout << vertex << " ";
+		cout << endl;
+		for (int vertex: targets_[team]) cout << vertex << " ";
+		cout << endl;
 	}
 	
 	// check vertices to pawn association
-	clog << "-----------------" << endl;
-	clog << "from vertices=" << " ";
+	cout << "-----------------" << endl;
+	cout << "from vertices=" << " ";
 	for (int vertex=0; vertex<vertices_.size(); vertex++) 
-		clog << vertex << " ";
-	clog << endl;
-	clog << "to pawns=" << " ";
+		cout << vertex << " ";
+	cout << endl;
+	cout << "to pawns=" << " ";
 	for (int vertex=0; vertex<vertices_.size(); vertex++)
-		clog << vertexToPawn_[vertex] << " ";
-	clog << endl;
-	clog << "from pawns=" << " ";
+		cout << vertexToPawn_[vertex] << " ";
+	cout << endl;
+	cout << "from pawns=" << " ";
 	for (int pawn=0; pawn<pawns_.size(); pawn++) 
-		clog << pawn << " ";
-	clog << endl;
-	clog << "to vertices=" << " ";
+		cout << pawn << " ";
+	cout << endl;
+	cout << "to vertices=" << " ";
 	for (int pawn=0; pawn<pawns_.size(); pawn++)
-		clog << pawnToVertex_[pawn] << " ";
-	clog << endl;
+		cout << pawnToVertex_[pawn] << " ";
+	cout << endl;
 }
 
 
@@ -482,6 +514,10 @@ double angle(double x1, double y1, double x2, double y2)
 
 int Hexagram::distance(Vertex vertex1, Vertex vertex2)
 {
+	#ifdef DEBUG
+	cout << "--- Computation of distance in Hexagram ---" << endl;
+	#endif
+	
 	double small_number = 1e-8;
 	
 	// positions of vertices
@@ -520,6 +556,10 @@ int Hexagram::distance(Vertex vertex1, Vertex vertex2)
 
 double Board::progressFromDistance(int team)
 {
+	#ifdef DEBUG
+	cout << "--- Computing progress from distance ---" << endl;
+	#endif
+	
 	// vertices
 	vector<int> homeVertices = homes_[team];
 	vector<int> targetVertices = targets_[team];
@@ -552,12 +592,23 @@ double Board::progressFromDistance(int team)
 // Returns 0 and performs the move if it is valid
 // Returns 1 if the move is incorrect
 // Returns 2 if the pawn or vertex doesn't exist
+// Returns 3 if the pawn's team has already finished the game
 
-int Board::move(int ipawn, int ivertex)
+int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 {
+	#ifdef DEBUG
+	cout << "--- Move in Hexagram ---" << endl;
+	#endif
+	
 	// Check if pawn and vertex exist
 	if (ipawn >= pawns_.size()) return 2;
 	if (ivertex >= vertices_.size()) return 2;
+	
+	// Check if team has not already finished the game
+	int team = pawns_[ipawn].getTeam();
+	vector<int> teamsDone = teamsOnTarget();
+	for (int team2 : teamsDone)
+		if (team == team2) return 3;
 	
 	// Check if move is a valid direct move
 	int ivertexCurrent = pawnToVertex_[ipawn];
@@ -575,7 +626,7 @@ int Board::move(int ipawn, int ivertex)
 	bool inList2 = false;
 	for (int ivertex2 : availableMovesHopping(ivertexCurrent))
 	{
-		if (ivertex2==ivertexCurrent)
+		if (ivertex2==ivertex)
 		{
 			inList2 = true;
 			break;
@@ -589,6 +640,16 @@ int Board::move(int ipawn, int ivertex)
 	vertexToPawn_[ivertex] = ipawn;
 	pawnToVertex_[ipawn] = ivertex;
 	
+	// Recompute neighbours, etc.
+	// TODO: nothing else ?
+	// TODO: do not recompute all neighbours
+	computeNeighbours();
+	computeNeighbours2();
+	
+	// Record move in file
+	recordFile << "Move from vertex " << ivertexCurrent << " to " 
+	           << ivertex << endl;
+	
 	return 0;
 }
 
@@ -599,6 +660,10 @@ int Board::move(int ipawn, int ivertex)
 
 vector<int> Board::availableMovesDirect(int ivertex)
 {
+	#ifdef DEBUG
+	cout << "--- Computaing available direct moves ---" << endl;
+	#endif
+	
 	vector<int> destinations;
 	
 	// Add all free neighbours
@@ -614,10 +679,34 @@ vector<int> Board::availableMovesDirect(int ivertex)
 
 // List of all possible moves by hopping, from a given vertex.
 // Note that this is a recursive search. This is why we need to forbid the
-// selection of the vertex that we are coming from (default=-1).
+// selection of the vertex that we are coming from.
 
-vector<int> Board::availableMovesHopping(int ivertex, int ivertexForbidden)
+vector<int> Board::availableMovesHopping(int ivertex, 
+            vector<int> &ivertexForbidden)
 {
+	#ifdef DEBUG
+	if (ivertexForbidden.size()==0)
+		cout << "--- Computing available hopping moves ---" << endl;
+	else
+		cout << "recursion from " 
+		     << ivertexForbidden[ivertexForbidden.size()-1] << endl;
+	#endif
+	
+	// list no available moves if the vertex is forbidden
+	// otherwise, add the vertex to the forbidden ones
+	bool isForbidden = false;
+	for (int ivertex2 : ivertexForbidden)
+	{
+		if (ivertex == ivertex2) 
+		{
+			isForbidden = true;
+			break;
+		}
+	}
+	vector<int> empty;
+	if (isForbidden) return empty;
+	else ivertexForbidden.push_back(ivertex);
+	
 	vector<int> destinations;
 	vector<int> neighbours = vertices_[ivertex].getNeighbours();
 	vector<int> neighbours2 = vertices_[ivertex].getNeighbours2();
@@ -628,12 +717,12 @@ vector<int> Board::availableMovesHopping(int ivertex, int ivertexForbidden)
 		int ivertex1 = neighbours[i];
 		int ivertex2 = neighbours2[i];
 		
-		if (vertexToPawn_[ivertex1]>=0 && vertexToPawn_[ivertex2]<0 &&
-		    ivertex2!=ivertexForbidden)
+		if (vertexToPawn_[ivertex1]>=0 && vertexToPawn_[ivertex2]<0)
 		{
 			destinations.push_back(ivertex2);
 			
-			for (int ivertex3 : availableMovesHopping(ivertex2, ivertex))
+			// recursion
+			for (int ivertex3 : availableMovesHopping(ivertex2, ivertexForbidden))
 				destinations.push_back(ivertex3);
 		}
 	}
@@ -650,3 +739,47 @@ vector<int> Board::availableMovesHopping(int ivertex, int ivertexForbidden)
 	
 	return destinations;
 }
+
+vector<int> Board::availableMovesHopping(int ivertex)
+{
+	vector<int> empty;
+	
+	return availableMovesHopping(ivertex, empty);
+}
+
+
+
+
+vector<int> Board::teamsOnTarget()
+{
+	#ifdef DEBUG
+	cout << "--- Computing teams on target ---" << endl;
+	#endif
+	
+	vector<int> teamsOnTarget_;
+	
+	for (int team=0; team<nTeams_; team++)
+	{
+		bool allTargetVerticesFilled = true;
+		vector<int> iverticesTarget = getTargetOfTeam(team);
+		
+		for (int ivertex : iverticesTarget)
+		{
+			int ipawn = vertexToPawn_[ivertex];
+			Pawn pawn = pawns_[ipawn];
+			if (pawn.getTeam() != team) 
+			{
+				allTargetVerticesFilled = false;
+				break;
+			}
+		}
+		
+		if (allTargetVerticesFilled) teamsOnTarget_.push_back(team);
+	}
+	
+	return teamsOnTarget_;
+}
+
+
+
+

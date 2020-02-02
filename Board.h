@@ -2,6 +2,7 @@
 #define BOARD
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <math.h>
 #include <assert.h>
@@ -73,6 +74,7 @@ class Board
 			placePawnsOnVertices();
 		}
 		
+		int getNTeams() {return nTeams_;}
 		vector<Vertex> getVertices() {return vertices_;}
 		vector<Pawn> getPawns() {return pawns_;}
 		
@@ -85,9 +87,12 @@ class Board
 		int distance(Vertex vertex1, Vertex vertex2) {return -1;} // to override
 		double progressFromDistance(int team);
 		
-		int move(int ipawn, int ivertex);
+		int move(int ipawn, int ivertex, ofstream &recordFile) {return -1;} // to override
 		vector<int> availableMovesDirect(int ivertex);
-		vector<int> availableMovesHopping(int ivertex, int ivertexForbidden=-1);
+		vector<int> availableMovesHopping(int ivertex);
+		vector<int> availableMovesHopping(int ivertex, vector<int> &ivertexForbidden);
+		
+		vector<int> teamsOnTarget();
 	
 	protected:
 		// construction of graph (to override)
@@ -148,6 +153,7 @@ class Hexagram : public Board
 		double getTotalSizeY() {return 2*sqrt(3)*size_;}
 		vector<int> verticesOnBranch(int branch);
 		int distance(Vertex vertex1, Vertex vertex2);
+		int move(int ipawn, int ivertex, ofstream &recordFile);
 		
 	protected:
 		// construction of graph

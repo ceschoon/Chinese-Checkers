@@ -13,8 +13,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
+//	o	distances list, or virtual somehow //TODO
 //	o	develop algorithm class with trivial diffusion algorithm
-//	o	end game detection
 //	o	random forward algorithm
 //	o	current best move algorithm
 //	o	statistics (number of moves, advancement tracking, game record)
@@ -28,23 +28,30 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <stdlib.h>
+#include <thread>
 #include <SFML/Graphics.hpp>
 #include "Board.h"
 #include "rendering.cpp"
 
 using namespace std;
 
-void checkMoves();
+void checkMoves(ofstream &recordFile);
 
 int main()
 {
+	/////////////////////////////// Files //////////////////////////////////
+	
+	system("mkdir -p data");
+	ofstream recordFile("data/record.dat");
+	
 	///////////////////////////// Game board ///////////////////////////////
 	
 	Hexagram board(6,3);
 	
 	#ifdef DEBUG
-	cout << "== Checking moves and moves detection ==" << endl;
-	checkMoves();
+	//cout << "== Checking moves and moves detection ==" << endl;
+	//checkMoves(recordFile2);
 	#endif
 	
 	/////////////////////////////// Window /////////////////////////////////
@@ -54,10 +61,18 @@ int main()
 	////////////////////////////// Game loop ///////////////////////////////
 	
 	bool gameEnded = false;
+	int pawnSelected = -1;
+	int counterMoves = 0;
+	
+	Hexagram boardSave = board;
+	bool undoAvailable = false;
 	
 	while (window.isOpen())
 	{
 		/////////////////////// Event processing ///////////////////////////
+		
+		double scaleX = window.getSize().x/board.getTotalSizeX()*0.9;
+		double scaleY = window.getSize().y/board.getTotalSizeY()*0.9;
 		
 		sf::Event event;
 		while (window.pollEvent(event))
@@ -66,19 +81,151 @@ int main()
 			{
 				window.close();
 			}
+			
+			// undo when key 'Z' is pressed
+			if (event.type == sf::Event::KeyPressed && 
+				event.key.code == sf::Keyboard::Z)
+			{
+				if (undoAvailable)
+				{
+					board = boardSave;
+					counterMoves --;
+					undoAvailable = false;
+					recordFile << "Undo" << endl;
+				}
+			}
+			
+			// select pawn by pressing mouse left click
+			if (event.type == sf::Event::MouseButtonPressed)
+			{
+				if (event.mouseButton.button == sf::Mouse::Left)
+				{
+					// coordinates in graph
+					double graphX = (double(event.mouseButton.x) 
+					                - window.getSize().x/2) / scaleX;
+					double graphY = (double(event.mouseButton.y) 
+					                - window.getSize().y/2)/ scaleY;
+					
+					// find the closest vertex
+					vector<Vertex> vertices = board.getVertices();
+					int ivertexMin = -1;
+					double distanceMin = -1;
+					for (int i=0; i<vertices.size(); i++)
+					{
+						double x = vertices[i].getX();
+						double y = vertices[i].getY();
+						
+						double d = sqrt((graphX-x)*(graphX-x)
+						               +(graphY-y)*(graphY-y));
+						
+						if (d<distanceMin || ivertexMin<0) 
+						{
+							ivertexMin = i;
+							distanceMin = d;
+						}
+					}
+					
+					// find selected pawn
+					pawnSelected = board.getPawnFromVertex(ivertexMin);
+					
+					#ifdef DEBUG
+					cout << "---- Mouse left click pressed ---" << endl;
+					cout << "mouse graphX = " << graphX << endl;
+					cout << "mouse graphY = " << graphY << endl;
+					cout << "vertexSelected = " << ivertexMin << endl;
+					cout << "pawnSelected = " << pawnSelected << endl;
+					cout << "available moves for selected pawn = ";
+					for (int ivertexAvail : board.availableMovesDirect(ivertexMin))
+						cout << ivertexAvail << " ";
+					for (int ivertexAvail : board.availableMovesHopping(ivertexMin))
+						cout << ivertexAvail << " ";
+					cout << endl;
+					#endif
+					
+					// check if slected pawn is in the right team
+					vector<Pawn> pawns = board.getPawns();
+					int teamOK = counterMoves%board.getNTeams();
+					if (pawns[pawnSelected].getTeam() != teamOK) 
+					{
+						pawnSelected = -1;
+						cout << "Selected pawn not in the right team" << endl;
+					}
+				}
+			}
+			
+			// place selected pawn by releasing mouse left click
+			if (event.type == sf::Event::MouseButtonReleased)
+			{
+				if (event.mouseButton.button == sf::Mouse::Left)
+				{
+					// coordinates in graph
+					double graphX = (double(event.mouseButton.x) 
+					                - window.getSize().x/2) / scaleX;
+					double graphY = (double(event.mouseButton.y) 
+					                - window.getSize().y/2)/ scaleY;
+					
+					// find the closest vertex
+					vector<Vertex> vertices = board.getVertices();
+					int ivertexMin = -1;
+					double distanceMin = -1;
+					for (int i=0; i<vertices.size(); i++)
+					{
+						double x = vertices[i].getX();
+						double y = vertices[i].getY();
+						
+						double d = sqrt((graphX-x)*(graphX-x)
+						               +(graphY-y)*(graphY-y));
+						
+						if (d<distanceMin || ivertexMin<0) 
+						{
+							ivertexMin = i;
+							distanceMin = d;
+						}
+					}
+					
+					#ifdef DEBUG
+					cout << "---- Mouse left click released ---" << endl;
+					cout << "mouse graphX = " << graphX << endl;
+					cout << "mouse graphY = " << graphY << endl;
+					cout << "vertexSelected = " << ivertexMin << endl;
+					#endif
+					
+					// save the board before making changes
+					Hexagram boardSave2 = board;
+					
+					// place selected pawn
+					int status = board.move(pawnSelected, ivertexMin, recordFile);
+					if (status == 0) 
+					{
+						counterMoves ++;
+						boardSave = boardSave2;
+						undoAvailable = true;
+					}
+					else 
+					{
+						cout << "Move is not valid" << endl;
+					}
+					
+					// clear selected pawn
+					pawnSelected = -1;
+				}
+			}
 		}
-		
-		double scaleX = window.getSize().x/board.getTotalSizeX()*0.9;
-		double scaleY = window.getSize().y/board.getTotalSizeY()*0.9;
 		
 		/////////////////////////// Rendering //////////////////////////////
 		
 		window.clear(sf::Color::White);
 		renderBoardEdges(window,board,scaleX,scaleY);
 		renderBoardVertices(window,board,scaleX,scaleY);
-		//renderTextVertices(window,board,scaleX,scaleY);
-		renderPawns(window,board,scaleX,scaleY);
+		#ifdef DEBUG
+		renderTextVertices(window,board,scaleX,scaleY);
+		#endif
+		renderPawns(window,board,scaleX,scaleY,pawnSelected);
+		renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
 		window.display();
+		
+		// pause to not use all cpu usage
+		this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 	
 	////////////////////////////////////////////////////////////////////////
@@ -90,7 +237,7 @@ int main()
 
 
 
-void checkMoves()
+void checkMoves(ofstream &recordFile)
 {
 	Hexagram board(6,3);
 	
@@ -111,13 +258,13 @@ void checkMoves()
 	cout << "move pawn from vertex " << ivertex;
 	ivertex = 8;
 	cout << " to vertex " << ivertex << ": ";
-	cout << board.move(ipawn,ivertex) << endl;
+	cout << board.move(ipawn,ivertex,recordFile) << endl;
 	
 	ipawn = board.getPawnFromVertex(ivertex);
 	cout << "move pawn from vertex " << ivertex;
 	ivertex = 11;
 	cout << " to vertex " << ivertex << ": ";
-	cout << board.move(ipawn,ivertex) << endl;
+	cout << board.move(ipawn,ivertex,recordFile) << endl;
 	
 	ivertex = 3;
 	cout << "available direct moves from vertex " << ivertex << ": " << endl;
