@@ -19,8 +19,9 @@
 //	o	current best move algorithm
 //	o	statistics (number of moves, advancement tracking, game record)
 
-//// Alternative play modes:
-//	o	Manual game, pawns moved with mouse
+//// Manual mode:
+//	o	Possibility to save and re-load the game
+//	o	indication of the winning order
 
 /// current minor problems:
 //	o	window resizing incorrect
@@ -63,6 +64,7 @@ int main()
 	bool gameEnded = false;
 	int pawnSelected = -1;
 	int counterMoves = 0;
+	int playingTeam = 0;
 	
 	Hexagram boardSave = board;
 	bool undoAvailable = false;
@@ -84,19 +86,20 @@ int main()
 			
 			// undo when key 'Z' is pressed
 			if (event.type == sf::Event::KeyPressed && 
-				event.key.code == sf::Keyboard::Z)
+				event.key.code == sf::Keyboard::Z && !gameEnded)
 			{
 				if (undoAvailable)
 				{
 					board = boardSave;
 					counterMoves --;
+					playingTeam = board.prevPlayingTeam(playingTeam);
 					undoAvailable = false;
 					recordFile << "Undo" << endl;
 				}
 			}
 			
 			// select pawn by pressing mouse left click
-			if (event.type == sf::Event::MouseButtonPressed)
+			if (event.type == sf::Event::MouseButtonPressed && !gameEnded)
 			{
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
@@ -142,10 +145,9 @@ int main()
 					cout << endl;
 					#endif
 					
-					// check if slected pawn is in the right team
+					// check if selected pawn is in the right team
 					vector<Pawn> pawns = board.getPawns();
-					int teamOK = counterMoves%board.getNTeams();
-					if (pawns[pawnSelected].getTeam() != teamOK) 
+					if (pawns[pawnSelected].getTeam() != playingTeam) 
 					{
 						pawnSelected = -1;
 						cout << "Selected pawn not in the right team" << endl;
@@ -154,7 +156,7 @@ int main()
 			}
 			
 			// place selected pawn by releasing mouse left click
-			if (event.type == sf::Event::MouseButtonReleased)
+			if (event.type == sf::Event::MouseButtonReleased && !gameEnded)
 			{
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
@@ -198,12 +200,20 @@ int main()
 					if (status == 0) 
 					{
 						counterMoves ++;
+						playingTeam = board.nextPlayingTeam(playingTeam);
 						boardSave = boardSave2;
 						undoAvailable = true;
+						
+						#ifdef DEBUG
+						cout << "*** Board print ***" << endl;
+						board.print();
+						cout << "*******************" << endl;
+						#endif
 					}
 					else 
 					{
-						cout << "Move is not valid" << endl;
+						cout << "Move is not valid, error code "
+						     << status << endl;
 					}
 					
 					// clear selected pawn
@@ -224,8 +234,15 @@ int main()
 		renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
 		window.display();
 		
+		///////////////////////////// Misc. ////////////////////////////////
+		
 		// pause to not use all cpu usage
 		this_thread::sleep_for(std::chrono::milliseconds(100));
+		
+		// detect end of the game
+		if (playingTeam<0) gameEnded = true;
+		
+		////////////////////////////////////////////////////////////////////
 	}
 	
 	////////////////////////////////////////////////////////////////////////

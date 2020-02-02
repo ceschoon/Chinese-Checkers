@@ -598,6 +598,7 @@ int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 {
 	#ifdef DEBUG
 	cout << "--- Move in Hexagram ---" << endl;
+	cout << "ipawn = " << ipawn << " ivertex = " << ivertex << endl;
 	#endif
 	
 	// Check if pawn and vertex exist
@@ -750,6 +751,53 @@ vector<int> Board::availableMovesHopping(int ivertex)
 
 
 
+int Board::nextPlayingTeam(int playingTeam)
+{
+	vector<int> teamsOnTarget_ = teamsOnTarget();
+	bool isStillInGame;
+	
+	if (teamsOnTarget_.size() >= nTeams_) return -1; // game finished
+	
+	do
+	{
+		playingTeam++;
+		playingTeam = playingTeam%nTeams_;
+		
+		isStillInGame = true;
+		for (int team : teamsOnTarget_) 
+			if (team == playingTeam) isStillInGame = false;
+		
+	} while (!isStillInGame);
+	
+	return playingTeam;
+}
+
+
+
+int Board::prevPlayingTeam(int playingTeam)
+{
+	vector<int> teamsOnTarget_ = teamsOnTarget();
+	bool isStillInGame;
+	
+	if (teamsOnTarget_.size() >= nTeams_) return -1; // game finished
+	
+	do
+	{
+		playingTeam--;
+		playingTeam = playingTeam%nTeams_;
+		
+		isStillInGame = true;
+		for (int team : teamsOnTarget_) 
+			if (team == playingTeam) isStillInGame = false;
+		
+	} while (!isStillInGame);
+	
+	return playingTeam;
+}
+
+
+
+
 vector<int> Board::teamsOnTarget()
 {
 	#ifdef DEBUG
@@ -766,8 +814,7 @@ vector<int> Board::teamsOnTarget()
 		for (int ivertex : iverticesTarget)
 		{
 			int ipawn = vertexToPawn_[ivertex];
-			Pawn pawn = pawns_[ipawn];
-			if (pawn.getTeam() != team) 
+			if (ipawn <0 || pawns_[ipawn].getTeam() != team) 
 			{
 				allTargetVerticesFilled = false;
 				break;
@@ -780,6 +827,32 @@ vector<int> Board::teamsOnTarget()
 	return teamsOnTarget_;
 }
 
+
+
+
+
+
+void Board::print()
+{
+	cout << "nTeams_ = " << nTeams_ << endl;
+	cout << "vertices_.size() = " << vertices_.size() << endl;
+	cout << "pawns_.size() = " << pawns_.size() << endl;
+	
+	cout << "pawnToVertex_ = ";
+	for (int ipawn=0; ipawn<pawns_.size(); ipawn ++) 
+		cout << ipawn << "->" << pawnToVertex_[ipawn] << " ";
+	cout << endl;
+	
+	cout << "vertexToPawn_ = ";
+	for (int ivertex=0; ivertex<vertices_.size(); ivertex++) 
+		cout << ivertex << "->" << vertexToPawn_[ivertex] << " ";
+	cout << endl;
+	
+	vector<int> teamsOnTarget2 = teamsOnTarget();
+	cout << "teamsOnTarget = ";
+	for (int team: teamsOnTarget2) cout << team << " ";
+	cout << endl;
+}
 
 
 

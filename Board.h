@@ -92,7 +92,11 @@ class Board
 		vector<int> availableMovesHopping(int ivertex);
 		vector<int> availableMovesHopping(int ivertex, vector<int> &ivertexForbidden);
 		
+		int nextPlayingTeam(int playingTeam);
+		int prevPlayingTeam(int playingTeam);
 		vector<int> teamsOnTarget();
+		
+		void print();
 	
 	protected:
 		// construction of graph (to override)
