@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	distances list, or virtual somehow //TODO
+//	o	distances list, or virtual somehow 
 //	o	develop algorithm class with trivial diffusion algorithm
 //	o	random forward algorithm
 //	o	current best move algorithm
@@ -21,7 +21,6 @@
 
 //// Manual mode:
 //	o	Possibility to save and re-load the game
-//	o	indication of the winning order
 
 /// current minor problems:
 //	o	window resizing incorrect
@@ -59,7 +58,7 @@ int main()
 	bool gameEnded = false;
 	int pawnSelected = -1;
 	int counterMoves = 0;
-	int playingTeam = 0;
+	bool showAvailableMoves = false;
 	
 	Hexagram boardSave = board;
 	bool undoAvailable = false;
@@ -87,10 +86,16 @@ int main()
 				{
 					board = boardSave;
 					counterMoves --;
-					playingTeam = board.prevPlayingTeam(playingTeam);
 					undoAvailable = false;
 					recordFile << "Undo" << endl;
 				}
+			}
+			
+			// toggle show available moves when key 'A' is pressed
+			if (event.type == sf::Event::KeyPressed && 
+				event.key.code == sf::Keyboard::A && !gameEnded)
+			{
+				showAvailableMoves = !showAvailableMoves;
 			}
 			
 			// select pawn by pressing mouse left click
@@ -142,7 +147,8 @@ int main()
 					
 					// check if selected pawn is in the right team
 					vector<Pawn> pawns = board.getPawns();
-					if (pawns[pawnSelected].getTeam() != playingTeam) 
+					if (pawns[pawnSelected].getTeam() != 
+					    board.getPlayingTeam()) 
 					{
 						pawnSelected = -1;
 						cout << "Selected pawn not in the right team" << endl;
@@ -195,7 +201,6 @@ int main()
 					if (status == 0) 
 					{
 						counterMoves ++;
-						playingTeam = board.nextPlayingTeam(playingTeam);
 						boardSave = boardSave2;
 						undoAvailable = true;
 						
@@ -220,14 +225,23 @@ int main()
 		/////////////////////////// Rendering //////////////////////////////
 		
 		window.clear(sf::Color::White);
+		
 		renderBoardEdges(window,board,scaleX,scaleY);
 		renderBoardVertices(window,board,scaleX,scaleY);
+		
 		#ifdef DEBUG
 		renderTextVertices(window,board,scaleX,scaleY);
 		#endif
+		
 		renderPawns(window,board,scaleX,scaleY,pawnSelected);
-		renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
+		
+		if (pawnSelected >= 0) 
+			renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
+		if (pawnSelected >= 0 && showAvailableMoves) 
+			renderAvailableMoves(window,board,scaleX,scaleY,pawnSelected);
+		
 		renderWinners(window,board,scaleX,scaleY);
+		
 		window.display();
 		
 		///////////////////////////// Misc. ////////////////////////////////
@@ -236,7 +250,7 @@ int main()
 		this_thread::sleep_for(std::chrono::milliseconds(100));
 		
 		// detect end of the game
-		if (playingTeam<0) gameEnded = true;
+		if (board.getPlayingTeam()<0) gameEnded = true;
 		
 		////////////////////////////////////////////////////////////////////
 	}

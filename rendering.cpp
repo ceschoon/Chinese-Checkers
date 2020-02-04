@@ -10,7 +10,24 @@
 const double PI = 3.14159265358979;
 
 
-
+sf::Color colorOfTeam(int team)
+{
+	if (team==0)
+		return sf::Color::Red;
+	else if (team==1)
+		return sf::Color::Green;
+	else if (team==2)
+		return sf::Color::Blue;
+	else if (team==3)
+		return sf::Color::Yellow;
+	else if (team==4)
+		return sf::Color::Magenta;
+	else if (team==5)
+		return sf::Color::Cyan;
+	
+	// default case
+	return sf::Color::White;
+}
 
 
 void renderBoardVertices(sf::RenderWindow &window, Board board, 
@@ -166,18 +183,7 @@ void renderPawns(sf::RenderWindow &window, Board board,
 		pawnShape.setPosition(sf::Vector2f(x,y));
 		
 		// color according to team
-		if (pawns[i].getTeam()==0)
-			pawnShape.setFillColor(sf::Color::Red);
-		else if (pawns[i].getTeam()==1)
-			pawnShape.setFillColor(sf::Color::Green);
-		else if (pawns[i].getTeam()==2)
-			pawnShape.setFillColor(sf::Color::Blue);
-		else if (pawns[i].getTeam()==3)
-			pawnShape.setFillColor(sf::Color::Yellow);
-		else if (pawns[i].getTeam()==4)
-			pawnShape.setFillColor(sf::Color::Magenta);
-		else if (pawns[i].getTeam()==5)
-			pawnShape.setFillColor(sf::Color::Cyan);
+		pawnShape.setFillColor(colorOfTeam(pawns[i].getTeam()));
 		
 		window.draw(pawnShape);
 	}
@@ -207,18 +213,7 @@ void renderSelectedPawn(sf::RenderWindow &window, Board board,
 	pawnShape.setPosition(sf::Vector2f(x,y));
 	
 	// color according to team
-	if (pawns[pawnSelected].getTeam()==0)
-		pawnShape.setFillColor(sf::Color::Red);
-	else if (pawns[pawnSelected].getTeam()==1)
-		pawnShape.setFillColor(sf::Color::Green);
-	else if (pawns[pawnSelected].getTeam()==2)
-		pawnShape.setFillColor(sf::Color::Blue);
-	else if (pawns[pawnSelected].getTeam()==3)
-		pawnShape.setFillColor(sf::Color::Yellow);
-	else if (pawns[pawnSelected].getTeam()==4)
-		pawnShape.setFillColor(sf::Color::Magenta);
-	else if (pawns[pawnSelected].getTeam()==5)
-		pawnShape.setFillColor(sf::Color::Cyan);
+	pawnShape.setFillColor(colorOfTeam(pawns[pawnSelected].getTeam()));
 	
 	window.draw(pawnShape);
 }
@@ -262,22 +257,57 @@ void renderWinners(sf::RenderWindow &window, Hexagram board,
 		text.setPosition(x,y);
 		
 		// color according to team
-		if (team==0)
-			text.setFillColor(sf::Color::Red);
-		else if (team==1)
-			text.setFillColor(sf::Color::Green);
-		else if (team==2)
-			text.setFillColor(sf::Color::Blue);
-		else if (team==3)
-			text.setFillColor(sf::Color::Yellow);
-		else if (team==4)
-			text.setFillColor(sf::Color::Magenta);
-		else if (team==5)
-			text.setFillColor(sf::Color::Cyan);
-			
+		text.setFillColor(colorOfTeam(team));
+		
 		window.draw(text);
 	}
 }
+
+
+
+
+void renderAvailableMoves(sf::RenderWindow &window, Board board, 
+                          double scaleX, double scaleY, int pawnSelected)
+{
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering available moves ---" << endl;
+	#endif
+	
+	double windowSizeX = window.getSize().x;
+	double windowSizeY = window.getSize().y;
+	
+	double vertexSize = 0.05;
+	sf::CircleShape vertexShape(vertexSize);
+	vertexShape.setScale(scaleX,scaleY);
+	
+	// get pawn's team for color
+	vector<Pawn> pawns = board.getPawns();
+	int team = pawns[pawnSelected].getTeam();
+	vertexShape.setFillColor(colorOfTeam(team));
+	
+	vector<Vertex> vertices = board.getVertices();
+	int ivertex = board.getVertexFromPawn(pawnSelected);
+	
+	// list available moves
+	vector<int> availMoves;
+	for (int i : board.availableMovesDirect(ivertex)) 
+		availMoves.push_back(i);
+	for (int i : board.availableMovesHopping(ivertex)) 
+		availMoves.push_back(i);
+	
+	for (int i : availMoves)
+	{
+		// vertex position in window
+		double x = windowSizeX/2 + vertices[i].getX() * scaleX 
+		           - vertexSize * scaleX;
+		double y = windowSizeY/2 + vertices[i].getY() * scaleY 
+		           - vertexSize * scaleY;
+		
+		vertexShape.setPosition(sf::Vector2f(x,y));
+		window.draw(vertexShape);
+	}
+}
+
 
 
 #endif

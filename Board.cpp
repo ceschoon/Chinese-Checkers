@@ -654,6 +654,9 @@ int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 	recordFile << "Move from vertex " << ivertexCurrent << " to " 
 	           << ivertex << endl;
 	
+	// compute next playing team
+	nextPlayingTeam();
+	
 	// Check if pawn's team just finished
 	if (teamsOnTarget().size() > nTeamsFinish0)
 		winningOrder_[team] = teamsOnTarget().size();
@@ -758,48 +761,46 @@ vector<int> Board::availableMovesHopping(int ivertex)
 
 
 
-int Board::nextPlayingTeam(int playingTeam)
+void Board::nextPlayingTeam()
 {
 	vector<int> teamsOnTarget_ = teamsOnTarget();
 	bool isStillInGame;
 	
-	if (teamsOnTarget_.size() >= nTeams_) return -1; // game finished
+	if (teamsOnTarget_.size() >= nTeams_) // game finished
+		playingTeam_ = -1;
 	
 	do
 	{
-		playingTeam++;
-		playingTeam = playingTeam%nTeams_;
+		playingTeam_++;
+		playingTeam_ = playingTeam_%nTeams_;
 		
 		isStillInGame = true;
 		for (int team : teamsOnTarget_) 
-			if (team == playingTeam) isStillInGame = false;
+			if (team == playingTeam_) isStillInGame = false;
 		
 	} while (!isStillInGame);
-	
-	return playingTeam;
 }
 
 
 
-int Board::prevPlayingTeam(int playingTeam)
+void Board::prevPlayingTeam()
 {
 	vector<int> teamsOnTarget_ = teamsOnTarget();
 	bool isStillInGame;
 	
-	if (teamsOnTarget_.size() >= nTeams_) return -1; // game finished
+	if (teamsOnTarget_.size() >= nTeams_) // game finished
+		playingTeam_ = -1;
 	
 	do
 	{
-		playingTeam--;
-		playingTeam = playingTeam%nTeams_;
+		playingTeam_--;
+		playingTeam_ = playingTeam_%nTeams_;
 		
 		isStillInGame = true;
 		for (int team : teamsOnTarget_) 
-			if (team == playingTeam) isStillInGame = false;
+			if (team == playingTeam_) isStillInGame = false;
 		
 	} while (!isStillInGame);
-	
-	return playingTeam;
 }
 
 

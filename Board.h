@@ -74,10 +74,13 @@ class Board
 			placePawnsOnVertices();
 			
 			// other
+			playingTeam_ = 0;
 			winningOrder_ = vector<int>(nTeams,-1);
 		}
 		
 		int getNTeams() {return nTeams_;}
+		int getPlayingTeam() {return playingTeam_;}
+		
 		vector<Vertex> getVertices() {return vertices_;}
 		vector<Pawn> getPawns() {return pawns_;}
 		
@@ -96,8 +99,6 @@ class Board
 		vector<int> availableMovesHopping(int ivertex);
 		vector<int> availableMovesHopping(int ivertex, vector<int> &ivertexForbidden);
 		
-		int nextPlayingTeam(int playingTeam);
-		int prevPlayingTeam(int playingTeam);
 		vector<int> teamsOnTarget();
 		
 		void print();
@@ -116,8 +117,13 @@ class Board
 		void placePawnsOnVertices() {;}
 		void checkPawnPlacement();
 		
+		// playing order subroutines
+		void nextPlayingTeam();
+		void prevPlayingTeam();
+		
 		// member variables
 		int nTeams_;
+		int playingTeam_;
 		vector<Vertex> vertices_;
 		vector<Pawn> pawns_;
 		vector<int> pawnToVertex_;    // index of pawn at given vertex
