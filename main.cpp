@@ -13,7 +13,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	distances list, or virtual somehow 
+//	o	more abstraction: (see Board.h)  // TODO next
+//		-> compute neighbours from distance and alignment functions
+//	o	even more abstraction by defining homes, targets and placement along
+//		with the pawns (#vertex >= #pawns). This limits the hexagram 
+//		overrides only to the distance function and generation of vertices.
+//		(keep the generation algo but rename the vertices afterwards?).
 //	o	develop algorithm class with trivial diffusion algorithm
 //	o	random forward algorithm
 //	o	current best move algorithm
@@ -23,7 +28,7 @@
 //	o	Possibility to save and re-load the game
 
 /// current minor problems:
-//	o	window resizing incorrect
+//
 
 #include <iostream>
 #include <fstream>
@@ -51,7 +56,16 @@ int main()
 	
 	/////////////////////////////// Window /////////////////////////////////
 	
-	sf::RenderWindow window(sf::VideoMode(640,640),"Chinese Checkers");
+	sf::RenderWindow window(sf::VideoMode(640,640), "Chinese Checkers");
+	
+	double boardLengthX = board.getTotalSizeX();
+	double boardLengthY = board.getTotalSizeY();
+	
+	sf::View view(sf::FloatRect(-boardLengthX*0.55, -boardLengthY*0.55, 
+	                             boardLengthX*1.10,  boardLengthY*1.10));
+	window.setView(view);
+	
+	window.setFramerateLimit(10);
 	
 	////////////////////////////// Game loop ///////////////////////////////
 	
@@ -66,9 +80,6 @@ int main()
 	while (window.isOpen())
 	{
 		/////////////////////// Event processing ///////////////////////////
-		
-		double scaleX = window.getSize().x/board.getTotalSizeX()*0.9;
-		double scaleY = window.getSize().y/board.getTotalSizeY()*0.9;
 		
 		sf::Event event;
 		while (window.pollEvent(event))
@@ -103,11 +114,11 @@ int main()
 			{
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
-					// coordinates in graph
-					double graphX = (double(event.mouseButton.x) 
-					                - window.getSize().x/2) / scaleX;
-					double graphY = (double(event.mouseButton.y) 
-					                - window.getSize().y/2)/ scaleY;
+					// coordinates of mouse in graph
+					sf::Vector2i windowCoords(event.mouseButton.x,
+					                          event.mouseButton.y);
+					double graphX = window.mapPixelToCoords(windowCoords).x;
+					double graphY = window.mapPixelToCoords(windowCoords).y;
 					
 					// find the closest vertex
 					vector<Vertex> vertices = board.getVertices();
@@ -161,11 +172,11 @@ int main()
 			{
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
-					// coordinates in graph
-					double graphX = (double(event.mouseButton.x) 
-					                - window.getSize().x/2) / scaleX;
-					double graphY = (double(event.mouseButton.y) 
-					                - window.getSize().y/2)/ scaleY;
+					// coordinates of mouse in graph
+					sf::Vector2i windowCoords(event.mouseButton.x,
+					                          event.mouseButton.y);
+					double graphX = window.mapPixelToCoords(windowCoords).x;
+					double graphY = window.mapPixelToCoords(windowCoords).y;
 					
 					// find the closest vertex
 					vector<Vertex> vertices = board.getVertices();
@@ -226,28 +237,25 @@ int main()
 		
 		window.clear(sf::Color::White);
 		
-		renderBoardEdges(window,board,scaleX,scaleY);
-		renderBoardVertices(window,board,scaleX,scaleY);
+		renderBoardEdges(window,board);
+		renderBoardVertices(window,board);
 		
 		#ifdef DEBUG
-		renderTextVertices(window,board,scaleX,scaleY);
+		renderTextVertices(window,board);
 		#endif
 		
-		renderPawns(window,board,scaleX,scaleY,pawnSelected);
+		renderPawns(window,board,pawnSelected);
 		
 		if (pawnSelected >= 0) 
-			renderSelectedPawn(window,board,scaleX,scaleY,pawnSelected);
+			renderSelectedPawn(window,board,pawnSelected);
 		if (pawnSelected >= 0 && showAvailableMoves) 
-			renderAvailableMoves(window,board,scaleX,scaleY,pawnSelected);
+			renderAvailableMoves(window,board,pawnSelected);
 		
-		renderWinners(window,board,scaleX,scaleY);
+		renderWinners(window,board);
 		
 		window.display();
 		
 		///////////////////////////// Misc. ////////////////////////////////
-		
-		// pause to not use all cpu usage
-		this_thread::sleep_for(std::chrono::milliseconds(100));
 		
 		// detect end of the game
 		if (board.getPlayingTeam()<0) gameEnded = true;

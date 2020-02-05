@@ -62,16 +62,17 @@ class Board
 			for (int i=0; i<nTeams; i++)
 				for (int j=0; j<nPawnsPerTeam; j++)
 					pawns_.push_back(Pawn(i));
-			
-			// contruct graph
+			/*
+			// contruct graph (to override)
 			generateVertices();
 			computeNeighbours();
 			computeNeighbours2();
 			
-			// place pawns on graph
+			// place pawns on graph (to override)
 			attributeHomeToTeams();
 			attributeTargetToTeams();
 			placePawnsOnVertices();
+			*/
 			
 			// other
 			playingTeam_ = 0;
@@ -91,7 +92,7 @@ class Board
 		vector<int> getTargetOfTeam(int team) {return targets_[team];}
 		vector<int> getWinningOrder() {return winningOrder_;}
 		
-		int distance(Vertex vertex1, Vertex vertex2) {return -1;} // to override
+		virtual int distance(Vertex vertex1, Vertex vertex2) {return -1;}
 		double progressFromDistance(int team);
 		
 		int move(int ipawn, int ivertex, ofstream &recordFile) {return -1;} // to override
@@ -105,8 +106,6 @@ class Board
 	
 	protected:
 		// construction of graph (to override)
-		// -> Rewrite the computation of neighbours with distance and 
-		//    alignment functions?
 		void generateVertices() {;}
 		void computeNeighbours() {;}
 		void computeNeighbours2() {;}
@@ -166,20 +165,23 @@ class Hexagram : public Board
 		int getNumPawnsPerTeam(){return size_*(size_+1)/2;}
 		double getTotalSizeX() {return 2*sqrt(3)*size_;}
 		double getTotalSizeY() {return 2*sqrt(3)*size_;}
-		vector<int> verticesOnBranch(int branch);
+		
 		int distance(Vertex vertex1, Vertex vertex2);
+		
+		// TODO: should be in board class only
 		int move(int ipawn, int ivertex, ofstream &recordFile);
 		
 	protected:
 		// construction of graph
 		void generateVertices();
-		void computeNeighbours();
-		void computeNeighbours2();
+		vector<int> verticesOnBranch(int branch);
+		void computeNeighbours();     // TODO: should be in board class only
+		void computeNeighbours2();    // TODO: should be in board class only
 		
 		// place pawns on graph
 		void attributeHomeToTeams();
 		void attributeTargetToTeams();
-		void placePawnsOnVertices();
+		void placePawnsOnVertices();  // TODO: should belong to board class
 		
 		// member variables
 		int size_;

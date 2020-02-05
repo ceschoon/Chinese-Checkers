@@ -456,7 +456,6 @@ void Board::checkPawnPlacement()
 {
 	#ifdef DEBUG
 	cout << "--- Checking pawn placement ---" << endl;
-	#endif
 	
 	// check home and target attribution
 	cout << "-----------------" << endl;
@@ -487,6 +486,8 @@ void Board::checkPawnPlacement()
 	for (int pawn=0; pawn<pawns_.size(); pawn++)
 		cout << pawnToVertex_[pawn] << " ";
 	cout << endl;
+	
+	#endif
 }
 
 
@@ -579,8 +580,13 @@ double Board::progressFromDistance(int team)
 	// compute the total distance between home and pawns
 	int distHomeToPawns = 0;
 	for (int i=0; i<homeVertices.size(); i++)
-		distHomeToTarget += distance(vertices_[homeVertices[i]], 
-		                             vertices_[pawnVertices[i]]);
+		distHomeToPawns += distance(vertices_[homeVertices[i]], 
+		                            vertices_[pawnVertices[i]]);
+	
+	#ifdef DEBUG
+	cout << "distance from home to pawns  = " << distHomeToPawns  << endl;
+	cout << "distance from home to target = " << distHomeToTarget << endl;
+	#endif
 	
 	return double(distHomeToPawns)/distHomeToTarget;
 }

@@ -30,30 +30,25 @@ sf::Color colorOfTeam(int team)
 }
 
 
-void renderBoardVertices(sf::RenderWindow &window, Board board, 
-                         double scaleX, double scaleY)
+void renderBoardVertices(sf::RenderWindow &window, Board board)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering board vertices ---" << endl;
 	#endif
 	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
-	
+	// vertex shape and colour
 	double vertexSize = 0.05;
 	sf::CircleShape vertexShape(vertexSize);
-	vertexShape.setScale(scaleX,scaleY);
 	vertexShape.setFillColor(sf::Color::Black);
 	
 	for (Vertex vertex : board.getVertices())
 	{
 		// vertex position in window
-		double x = windowSizeX/2 + vertex.getX() * scaleX 
-		           - vertexSize * scaleX;
-		double y = windowSizeY/2 + vertex.getY() * scaleY 
-		           - vertexSize * scaleY;
+		double x = vertex.getX() - vertexSize;
+		double y = vertex.getY() - vertexSize;
 		
 		vertexShape.setPosition(sf::Vector2f(x,y));
+		
 		window.draw(vertexShape);
 	}
 }
@@ -62,34 +57,32 @@ void renderBoardVertices(sf::RenderWindow &window, Board board,
 
 
 
-void renderTextVertices(sf::RenderWindow &window, Board board, 
-                        double scaleX, double scaleY)
+void renderTextVertices(sf::RenderWindow &window, Board board)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering text on vertices ---" << endl;
 	#endif
 	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
-	
 	sf::Font font;
 	if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"));
-
+	
+	// scale difference as text is set in pixels not in board coordinates
+	double pixelWidth = window.mapPixelToCoords(sf::Vector2i(0,0)).x
+	                  - window.mapPixelToCoords(sf::Vector2i(1,0)).x;
+	pixelWidth = abs(pixelWidth);
+	
 	sf::Text text;
 	text.setFont(font);
 	text.setFillColor(sf::Color::Red);
 	text.setCharacterSize(20);
+	text.setScale(pixelWidth,pixelWidth);
 	
 	vector<Vertex> vertices = board.getVertices();
 	
 	for (int i=0; i<vertices.size(); i++)
 	{
-		// vertex position in window
-		double x = windowSizeX/2 + vertices[i].getX() * scaleX;
-		double y = windowSizeY/2 + vertices[i].getY() * scaleY;
-		
 		text.setString(to_string(i));
-		text.setPosition(x,y);
+		text.setPosition(vertices[i].getX(),vertices[i].getY());
 		window.draw(text);
 	}
 }
@@ -98,23 +91,19 @@ void renderTextVertices(sf::RenderWindow &window, Board board,
 
 
 
-void renderBoardEdges(sf::RenderWindow &window, Board board, 
-                      double scaleX, double scaleY)
+void renderBoardEdges(sf::RenderWindow &window, Board board)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering board edges ---" << endl;
 	#endif
-	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
 	
 	vector<Vertex> vertices = board.getVertices();
 	
 	for (Vertex vertex : vertices)
 	{
 		// vertex position in window
-		double x = windowSizeX/2 + vertex.getX() * scaleX;
-		double y = windowSizeY/2 + vertex.getY() * scaleY;
+		double x = vertex.getX();
+		double y = vertex.getY();
 		
 		vector<int> neighbours = vertex.getNeighbours();
 		
@@ -124,8 +113,8 @@ void renderBoardEdges(sf::RenderWindow &window, Board board,
 			Vertex vertex2 = vertices[neighbour];
 			
 			// neighbour position in window
-			double x2 = windowSizeX/2 + vertex2.getX() * scaleX;
-			double y2 = windowSizeY/2 + vertex2.getY() * scaleY;
+			double x2 = vertex2.getX();
+			double y2 = vertex2.getY();
 			
 			double d = sqrt((x2-x)*(x2-x)+(y2-y)*(y2-y));
 			double angle;
@@ -134,11 +123,19 @@ void renderBoardEdges(sf::RenderWindow &window, Board board,
 			else if ((x2-x)>0) angle = atan((y2-y)/(x2-x)) * 180/PI;
 			else if ((x2-x)<0) angle = atan((y2-y)/(x2-x)) * 180/PI + 180;
 			
-			double edgesWidth = 0.5;
+			// difficult to have the same width for all edges when rendered
+			//double edgesWidth = 0.02;
+			double pixelWidth = window.mapPixelToCoords(sf::Vector2i(0,0)).x
+			                  - window.mapPixelToCoords(sf::Vector2i(1,0)).x;
+			double edgesWidth = abs(pixelWidth)*2;
 			sf::RectangleShape edgeShape(sf::Vector2f(d,edgesWidth));
 			edgeShape.setFillColor(sf::Color::Black);
-			edgeShape.setPosition(sf::Vector2f(x,y));
 			edgeShape.setRotation(angle);
+			
+			// correct position to take into account the rectangle width
+			double xc = x - edgesWidth/2*cos(PI/180*(angle+90));
+			double yc = y - edgesWidth/2*sin(PI/180*(angle+90));
+			edgeShape.setPosition(sf::Vector2f(xc,yc));
 			
 			window.draw(edgeShape);
 		}
@@ -149,20 +146,14 @@ void renderBoardEdges(sf::RenderWindow &window, Board board,
 
 
 
-
-void renderPawns(sf::RenderWindow &window, Board board, 
-                 double scaleX, double scaleY, int pawnSelected=-1)
+void renderPawns(sf::RenderWindow &window, Board board, int pawnSelected=-1)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering pawns ---" << endl;
 	#endif
 	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
-	
 	double pawnSize = 0.2;
 	sf::CircleShape pawnShape(pawnSize);
-	pawnShape.setScale(scaleX,scaleY);
 	
 	vector<Pawn> pawns = board.getPawns();
 	for (int i=0; i<pawns.size(); i++)
@@ -175,11 +166,8 @@ void renderPawns(sf::RenderWindow &window, Board board,
 		Vertex vertex = board.getVertices()[j];
 		
 		// pawn position in window
-		double x = windowSizeX/2 + vertex.getX() * scaleX 
-		           - pawnSize * scaleX;
-		double y = windowSizeY/2 + vertex.getY() * scaleY 
-		           - pawnSize * scaleY;
-		
+		double x = vertex.getX() - pawnSize;
+		double y = vertex.getY() - pawnSize;
 		pawnShape.setPosition(sf::Vector2f(x,y));
 		
 		// color according to team
@@ -193,7 +181,7 @@ void renderPawns(sf::RenderWindow &window, Board board,
 
 
 void renderSelectedPawn(sf::RenderWindow &window, Board board, 
-                        double scaleX, double scaleY, int pawnSelected)
+                        int pawnSelected=-1)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering selected pawn ---" << endl;
@@ -205,11 +193,14 @@ void renderSelectedPawn(sf::RenderWindow &window, Board board,
 	// pawn shape
 	double pawnSize = 0.2;
 	sf::CircleShape pawnShape(pawnSize);
-	pawnShape.setScale(scaleX,scaleY);
+	
+	// coordinates of mouse in graph
+	double graphX = window.mapPixelToCoords(sf::Mouse::getPosition(window)).x;
+	double graphY = window.mapPixelToCoords(sf::Mouse::getPosition(window)).y;
 	
 	// pawn position in window
-	double x = sf::Mouse::getPosition(window).x	- pawnSize * scaleX;
-	double y = sf::Mouse::getPosition(window).y	- pawnSize * scaleY;
+	double x = graphX - pawnSize;
+	double y = graphY- pawnSize;
 	pawnShape.setPosition(sf::Vector2f(x,y));
 	
 	// color according to team
@@ -221,15 +212,11 @@ void renderSelectedPawn(sf::RenderWindow &window, Board board,
 
 
 
-void renderWinners(sf::RenderWindow &window, Hexagram board, 
-                   double scaleX, double scaleY)
+void renderWinners(sf::RenderWindow &window, Hexagram board)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering winning order ---" << endl;
 	#endif
-	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
 	
 	sf::Font font;
 	if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"));
@@ -252,8 +239,8 @@ void renderWinners(sf::RenderWindow &window, Hexagram board,
 		// text position in window
 		double d = board.getTotalSizeX()/2;
 		double angle = PI/180*(360.0/nTeams*team+100);
-		double x = windowSizeX/2 + scaleX * d * cos(angle);
-		double y = windowSizeY/2 + scaleY * d * sin(angle);
+		double x = d * cos(angle);
+		double y = d * sin(angle);
 		text.setPosition(x,y);
 		
 		// color according to team
@@ -267,18 +254,14 @@ void renderWinners(sf::RenderWindow &window, Hexagram board,
 
 
 void renderAvailableMoves(sf::RenderWindow &window, Board board, 
-                          double scaleX, double scaleY, int pawnSelected)
+                          int pawnSelected=-1)
 {
 	#ifdef DEBUG_RENDERING
 	cout << "--- Rendering available moves ---" << endl;
 	#endif
 	
-	double windowSizeX = window.getSize().x;
-	double windowSizeY = window.getSize().y;
-	
 	double vertexSize = 0.05;
 	sf::CircleShape vertexShape(vertexSize);
-	vertexShape.setScale(scaleX,scaleY);
 	
 	// get pawn's team for color
 	vector<Pawn> pawns = board.getPawns();
@@ -298,10 +281,8 @@ void renderAvailableMoves(sf::RenderWindow &window, Board board,
 	for (int i : availMoves)
 	{
 		// vertex position in window
-		double x = windowSizeX/2 + vertices[i].getX() * scaleX 
-		           - vertexSize * scaleX;
-		double y = windowSizeY/2 + vertices[i].getY() * scaleY 
-		           - vertexSize * scaleY;
+		double x = vertices[i].getX() - vertexSize;
+		double y = vertices[i].getY() - vertexSize;
 		
 		vertexShape.setPosition(sf::Vector2f(x,y));
 		window.draw(vertexShape);
