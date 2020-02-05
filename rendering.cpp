@@ -220,10 +220,16 @@ void renderWinners(sf::RenderWindow &window, Hexagram board)
 	
 	sf::Font font;
 	if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"));
-
+	
+	// scale difference as text is set in pixels not in board coordinates
+	double pixelWidth = window.mapPixelToCoords(sf::Vector2i(0,0)).x
+	                  - window.mapPixelToCoords(sf::Vector2i(1,0)).x;
+	pixelWidth = abs(pixelWidth);
+	
 	sf::Text text;
 	text.setFont(font);
 	text.setCharacterSize(20);
+	text.setScale(pixelWidth,pixelWidth);
 	
 	vector<int> winningOrder = board.getWinningOrder();
 	int nTeams = winningOrder.size();

@@ -62,17 +62,6 @@ class Board
 			for (int i=0; i<nTeams; i++)
 				for (int j=0; j<nPawnsPerTeam; j++)
 					pawns_.push_back(Pawn(i));
-			/*
-			// contruct graph (to override)
-			generateVertices();
-			computeNeighbours();
-			computeNeighbours2();
-			
-			// place pawns on graph (to override)
-			attributeHomeToTeams();
-			attributeTargetToTeams();
-			placePawnsOnVertices();
-			*/
 			
 			// other
 			playingTeam_ = 0;
@@ -82,39 +71,48 @@ class Board
 		int getNTeams() {return nTeams_;}
 		int getPlayingTeam() {return playingTeam_;}
 		
+		// vertices and pawns
 		vector<Vertex> getVertices() {return vertices_;}
 		vector<Pawn> getPawns() {return pawns_;}
 		
+		// vertex to pawn relation
 		int getVertexFromPawn(int ipawn) {return pawnToVertex_[ipawn];}
 		int getPawnFromVertex(int ivertex) {return vertexToPawn_[ivertex];}
 		
+		// homes and targets
 		vector<int> getHomeOfTeam(int team) {return homes_[team];}
 		vector<int> getTargetOfTeam(int team) {return targets_[team];}
 		vector<int> getWinningOrder() {return winningOrder_;}
+		vector<int> teamsOnTarget();
 		
+		// geometry
 		virtual int distance(Vertex vertex1, Vertex vertex2) {return -1;}
+		virtual bool aligned(Vertex vertex1, Vertex vertex2, 
+		                     Vertex vertex3) {return false;}
 		double progressFromDistance(int team);
 		
-		int move(int ipawn, int ivertex, ofstream &recordFile) {return -1;} // to override
+		// moves
+		int move(int ipawn, int ivertex, ofstream &recordFile);
 		vector<int> availableMovesDirect(int ivertex);
 		vector<int> availableMovesHopping(int ivertex);
-		vector<int> availableMovesHopping(int ivertex, vector<int> &ivertexForbidden);
-		
-		vector<int> teamsOnTarget();
+		vector<int> availableMovesHopping(int ivertex, 
+		                                  vector<int> &ivertexForbidden);
 		
 		void print();
 	
 	protected:
 		// construction of graph (to override)
-		void generateVertices() {;}
-		void computeNeighbours() {;}
-		void computeNeighbours2() {;}
+		virtual void generateVertices() {;}
+		virtual void attributeHomeToTeams() {;}
+		virtual void attributeTargetToTeams() {;}
 		
-		// place pawns on graph (to override)
-		void attributeHomeToTeams() {;}
-		void attributeTargetToTeams() {;}
-		void placePawnsOnVertices() {;}
+		// place pawns on graph
+		void placePawnsOnVertices(); // should not be used before making graph
 		void checkPawnPlacement();
+		
+		// computation of neighbours
+		void computeNeighbours();
+		void computeNeighbours2();
 		
 		// playing order subroutines
 		void nextPlayingTeam();
@@ -162,26 +160,20 @@ class Hexagram : public Board
 			#endif
 		}
 		
-		int getNumPawnsPerTeam(){return size_*(size_+1)/2;}
+		int getNumPawnsPerTeam() {return size_*(size_+1)/2;}
 		double getTotalSizeX() {return 2*sqrt(3)*size_;}
 		double getTotalSizeY() {return 2*sqrt(3)*size_;}
 		
+		// geometry (override of virtual board functions)
 		int distance(Vertex vertex1, Vertex vertex2);
-		
-		// TODO: should be in board class only
-		int move(int ipawn, int ivertex, ofstream &recordFile);
+		bool aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3);
 		
 	protected:
-		// construction of graph
+		// construction of graph (override of virtual board functions)
 		void generateVertices();
 		vector<int> verticesOnBranch(int branch);
-		void computeNeighbours();     // TODO: should be in board class only
-		void computeNeighbours2();    // TODO: should be in board class only
-		
-		// place pawns on graph
 		void attributeHomeToTeams();
 		void attributeTargetToTeams();
-		void placePawnsOnVertices();  // TODO: should belong to board class
 		
 		// member variables
 		int size_;

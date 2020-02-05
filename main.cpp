@@ -13,12 +13,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	more abstraction: (see Board.h)  // TODO next
-//		-> compute neighbours from distance and alignment functions
-//	o	even more abstraction by defining homes, targets and placement along
-//		with the pawns (#vertex >= #pawns). This limits the hexagram 
-//		overrides only to the distance function and generation of vertices.
-//		(keep the generation algo but rename the vertices afterwards?).
 //	o	develop algorithm class with trivial diffusion algorithm
 //	o	random forward algorithm
 //	o	current best move algorithm
@@ -26,9 +20,10 @@
 
 //// Manual mode:
 //	o	Possibility to save and re-load the game
+//		->	Instant reload and replay game
 
 /// current minor problems:
-//
+//	
 
 #include <iostream>
 #include <fstream>

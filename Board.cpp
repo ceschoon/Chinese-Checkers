@@ -5,6 +5,7 @@
 using namespace std;
 
 const double PI = 3.14159265358979;
+const double SMALL_NUMBER = 1e-8;
 
 
 
@@ -141,7 +142,7 @@ void Hexagram::generateVertices()
 // Computation of direct neighbours. The method is to search for vertices
 // at distance 1 from the current vertex.
 
-void Hexagram::computeNeighbours()
+void Board::computeNeighbours()
 {
 	#ifdef DEBUG
 	cout << "--- First neighbours computation ---" << endl;
@@ -155,18 +156,8 @@ void Hexagram::computeNeighbours()
 		{
 			if (i==j) continue;
 			
-			// vertex i position
-			double xi = vertices_[i].getX();
-			double yi = vertices_[i].getY();
-			
-			// vertex j position
-			double xj = vertices_[j].getX();
-			double yj = vertices_[j].getY();
-			
 			// distance check
-			double small_number = 1e-8;
-			double d = sqrt((xi-xj)*(xi-xj)+(yi-yj)*(yi-yj));
-			if (d>1-small_number && d<1+small_number)
+			if (distance(vertices_[i],vertices_[j])==1) 
 				neighbours.push_back(j);
 		}
 		
@@ -182,7 +173,7 @@ void Hexagram::computeNeighbours()
 // within the neighbours' neighbours which ones are aligned in the direct 
 // neighbour's direction. 
 
-void Hexagram::computeNeighbours2()
+void Board::computeNeighbours2()
 {
 	#ifdef DEBUG
 	cout << "--- Second neighbours computation ---" << endl;
@@ -205,27 +196,11 @@ void Hexagram::computeNeighbours2()
 			for (int n=0; n<neighboursj1.size(); n++)
 			{
 				int k = neighboursj1[n];
-				
-				// vertex i position
-				double xi = vertices_[i].getX();
-				double yi = vertices_[i].getY();
-				
-				// vertex j position
-				double xj = vertices_[j].getX();
-				double yj = vertices_[j].getY();
-				
-				// vertex k position
-				double xk = vertices_[k].getX();
-				double yk = vertices_[k].getY();
+				if (k==i) continue;
 				
 				// alignment check
-				// test if the vector from i to j is the same as the one
-				// from j to k.
-				double small_number = 1e-8;
-				double xdiff = abs((xj-xi)-(xk-xj));
-				double ydiff = abs((yj-yi)-(yk-yj));
-				if (xdiff<small_number && ydiff<small_number)
-					// store index k as second neighbour of i behind j
+				// if ok, store vertex k as second neighbour of i behind j
+				if (aligned(vertices_[i],vertices_[j],vertices_[k]))
 					neighboursi2_new[m] = k;
 			}
 		}
@@ -411,7 +386,7 @@ void Hexagram::attributeTargetToTeams()
 
 
 
-void Hexagram::placePawnsOnVertices()
+void Board::placePawnsOnVertices()
 {
 	#ifdef DEBUG
 	cout << "--- Placing pawns on vertices ---" << endl;
@@ -507,6 +482,46 @@ double angle(double x1, double y1, double x2, double y2)
 	return angle12;
 }
 
+
+
+bool Hexagram::aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3)
+{
+	#ifdef DEBUG
+	//cout << "--- Computation of alignment in Hexagram ---" << endl;
+	#endif
+	
+	// positions of vertices
+	double x1 = vertex1.getX();
+	double y1 = vertex1.getY();
+	double x2 = vertex2.getX();
+	double y2 = vertex2.getY();
+	double x3 = vertex3.getX();
+	double y3 = vertex3.getY();
+	
+	// compute angles
+	double angle12 = angle(x1,y1,x2,y2);
+	double angle23 = angle(x2,y2,x3,y3);
+	
+	// check alignement
+	bool isAligned = false;
+	if (abs(angle12-angle23)<SMALL_NUMBER) isAligned = true;
+	if (abs(angle12-angle23+180)<SMALL_NUMBER) isAligned = true;
+	if (abs(angle12-angle23-180)<SMALL_NUMBER) isAligned = true; 
+	
+	/*
+	#ifdef DEBUG
+	cout << "x1 = " << x1 << " y1 = " << y1 << endl;
+	cout << "x2 = " << x2 << " y2 = " << y2 << endl;
+	cout << "x3 = " << x3 << " y3 = " << y3 << endl;
+	cout << "isAligned = " << isAligned << endl;
+	#endif
+	*/
+	
+	return isAligned;
+}
+
+
+
 // On the triangular lattice of the hexagram, the distance is the minimum
 // number of steps vertex to vertex. These steps can be taken along three
 // axes (lines with angles 0,60,120). We can easily see that the shortest
@@ -516,7 +531,7 @@ double angle(double x1, double y1, double x2, double y2)
 int Hexagram::distance(Vertex vertex1, Vertex vertex2)
 {
 	#ifdef DEBUG
-	cout << "--- Computation of distance in Hexagram ---" << endl;
+	//cout << "--- Computation of distance in Hexagram ---" << endl;
 	#endif
 	
 	double small_number = 1e-8;
@@ -600,10 +615,10 @@ double Board::progressFromDistance(int team)
 // Returns 2 if the pawn or vertex doesn't exist
 // Returns 3 if the pawn's team has already finished the game
 
-int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
+int Board::move(int ipawn, int ivertex, ofstream &recordFile)
 {
 	#ifdef DEBUG
-	cout << "--- Move in Hexagram ---" << endl;
+	cout << "--- Move (Board class) ---" << endl;
 	cout << "ipawn = " << ipawn << " ivertex = " << ivertex << endl;
 	#endif
 	
@@ -651,7 +666,6 @@ int Hexagram::move(int ipawn, int ivertex, ofstream &recordFile)
 	pawnToVertex_[ipawn] = ivertex;
 	
 	// Recompute neighbours, etc.
-	// TODO: nothing else ?
 	// TODO: do not recompute all neighbours
 	computeNeighbours();
 	computeNeighbours2();
@@ -773,7 +787,10 @@ void Board::nextPlayingTeam()
 	bool isStillInGame;
 	
 	if (teamsOnTarget_.size() >= nTeams_) // game finished
+	{
 		playingTeam_ = -1;
+		return;
+	}
 	
 	do
 	{
@@ -795,7 +812,10 @@ void Board::prevPlayingTeam()
 	bool isStillInGame;
 	
 	if (teamsOnTarget_.size() >= nTeams_) // game finished
+	{
 		playingTeam_ = -1;
+		return;
+	}
 	
 	do
 	{
