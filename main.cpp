@@ -13,17 +13,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	develop algorithm class with trivial diffusion algorithm
 //	o	random forward algorithm
 //	o	current best move algorithm
 //	o	statistics (number of moves, advancement tracking, game record)
-
-//// Manual mode:
-//	o	Possibility to save and re-load the game
+//	o	possibility to save and re-load the game
 //		->	Instant reload and replay game
 
-/// current minor problems:
-//	
+/// current problems:
+//	o	the move function should be able to be called without record file
 
 #include <iostream>
 #include <fstream>
@@ -33,9 +30,11 @@
 #include <SFML/Graphics.hpp>
 #include "Board.h"
 #include "rendering.cpp"
+#include "algorithm.cpp"
 
 using namespace std;
 
+void algorithm(Board board, int &ipawnToMove, int &ivertexDestination);
 void checkMoves(ofstream &recordFile);
 
 int main()
@@ -72,6 +71,9 @@ int main()
 	Hexagram boardSave = board;
 	bool undoAvailable = false;
 	
+	// seed from algorithm.cpp
+	cout << "seed = " << seed << endl;
+	
 	while (window.isOpen())
 	{
 		/////////////////////// Event processing ///////////////////////////
@@ -97,11 +99,44 @@ int main()
 				}
 			}
 			
-			// toggle show available moves when key 'A' is pressed
+			// toggle show available moves when key 'M' is pressed
+			if (event.type == sf::Event::KeyPressed && 
+				event.key.code == sf::Keyboard::M && !gameEnded)
+			{
+				showAvailableMoves = !showAvailableMoves;
+			}
+			
+			// make a move using an algorithm when key 'A' is pressed
 			if (event.type == sf::Event::KeyPressed && 
 				event.key.code == sf::Keyboard::A && !gameEnded)
 			{
-				showAvailableMoves = !showAvailableMoves;
+				// save the board before making changes
+				Hexagram boardSave2 = board;
+				
+				// decide move to perform
+				int ipawnToMove = -1;
+				int ivertexDestination = -1;
+				algorithm(board, ipawnToMove, ivertexDestination);
+				
+				// place selected pawn
+				int status = board.move(ipawnToMove, ivertexDestination, recordFile);
+				if (status == 0) 
+				{
+					counterMoves ++;
+					boardSave = boardSave2;
+					undoAvailable = true;
+					
+					#ifdef DEBUG
+					cout << "*** Board print ***" << endl;
+					board.print();
+					cout << "*******************" << endl;
+					#endif
+				}
+				else 
+				{
+					cout << "Move is not valid, error code "
+					     << status << endl;
+				}
 			}
 			
 			// select pawn by pressing mouse left click

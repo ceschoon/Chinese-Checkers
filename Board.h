@@ -56,7 +56,8 @@ class Pawn
 class Board
 {
 	public: 
-		Board(int nTeams, int nPawnsPerTeam) : nTeams_(nTeams)
+		Board(int nTeams, int nPawnsPerTeam) 
+		: nTeams_(nTeams), nPawnsPerTeam_(nPawnsPerTeam)
 		{
 			// create pawns
 			for (int i=0; i<nTeams; i++)
@@ -69,6 +70,7 @@ class Board
 		}
 		
 		int getNTeams() {return nTeams_;}
+		int getNPawnsPerTeam() {return nPawnsPerTeam_;}
 		int getPlayingTeam() {return playingTeam_;}
 		
 		// vertices and pawns
@@ -120,6 +122,7 @@ class Board
 		
 		// member variables
 		int nTeams_;
+		int nPawnsPerTeam_;
 		int playingTeam_;
 		vector<Vertex> vertices_;
 		vector<Pawn> pawns_;
