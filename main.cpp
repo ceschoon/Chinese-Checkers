@@ -34,7 +34,6 @@
 
 using namespace std;
 
-void algorithm(Board board, int &ipawnToMove, int &ivertexDestination);
 void checkMoves(ofstream &recordFile);
 
 int main()
@@ -114,9 +113,12 @@ int main()
 				Hexagram boardSave2 = board;
 				
 				// decide move to perform
+				// we copy the board to prevent the algorithm from making
+				// changes
 				int ipawnToMove = -1;
 				int ivertexDestination = -1;
-				algorithm(board, ipawnToMove, ivertexDestination);
+				Hexagram boardCopy = board;
+				algorithm(boardCopy, ipawnToMove, ivertexDestination);
 				
 				// place selected pawn
 				int status = board.move(ipawnToMove, ivertexDestination, recordFile);
