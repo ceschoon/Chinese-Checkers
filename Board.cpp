@@ -1,3 +1,13 @@
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+//    Implementation file for board-related classes of the chinese        //
+//    checkers game.                                                      //
+//                                                                        //
+//    Author: Cédric Schoonen <cedric.schoonen1@gmail.com>                //
+//    February 2020                                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <math.h>
 #include "Board.h"

@@ -1,3 +1,17 @@
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+//    Implementation file for algorithms that play chinese checkers.      //
+//                                                                        //
+//    Author: Cédric Schoonen <cedric.schoonen1@gmail.com>                //
+//    February 2020                                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
+//	Ideas for better algorithms
+//	o	fitness term to keep pawns close to each others
+//	o	for convex graphs/hexagram, fitness term to go away from the center
+
+
 #ifndef ALGORITHM
 #define ALGORITHM
 
@@ -82,8 +96,8 @@ void randomMove(Board &board, int &ipawnToMove, int &ivertexDestination)
 
 
 // Fit function using the summed distances to the target vertices
-int fitDistanceToTargets(Board &board, int ivertexFrom, int ivertexTo,
-                         int team)
+double fitDistanceToTargets(Board &board, int ivertexFrom, int ivertexTo,
+                             int team)
 {
 	vector<Vertex> vertices = board.getVertices();
 	vector<int> targets = board.getTargetOfTeam(team);
@@ -101,14 +115,11 @@ int fitDistanceToTargets(Board &board, int ivertexFrom, int ivertexTo,
 
 // Fit function using the distance to a free target vertex
 // Tweaked to limit moves from a target vertex 
-int fitDistanceToFreeTarget(Board &board, int ivertexFrom, int ivertexTo,
-                            int team)
+double fitDistanceToFreeTarget(Board &board, int ivertexFrom, int ivertexTo,
+                               int team)
 {
 	vector<Vertex> vertices = board.getVertices();
 	vector<int> targets = board.getTargetOfTeam(team);
-	
-	// devaluate moves from a target vertex 
-	for (int itarget : targets) if (itarget == ivertexFrom) return 0;
 	
 	// find the free targets
 	vector<int> freeTargets;
@@ -131,7 +142,11 @@ int fitDistanceToFreeTarget(Board &board, int ivertexFrom, int ivertexTo,
 	int distance2 = 0;
 	for (int itarget : targets)
 		distance2 += board.distance(vertices[ivertexTo], vertices[itargetChosen]);
-		
+	
+	// devaluate moves from a target vertex 
+	for (int itarget : targets) if (itarget == ivertexFrom) 
+		return 1.0/3*(distance1-distance2);
+	
 	return distance1-distance2;
 }
 
@@ -164,13 +179,13 @@ void bestMove0MinSum(Board &board, int &ipawnToMove, int &ivertexDestination)
 	
 	// initialise best move
 	Move moveBest = moves[0];
-	int bestFit = fitDistanceToTargets(board, moveBest.ivertexFrom_, 
-	                                   moveBest.ivertexTo_, pteam);
+	double bestFit = fitDistanceToTargets(board, moveBest.ivertexFrom_, 
+	                                      moveBest.ivertexTo_, pteam);
 	
 	for (Move move : moves)
 	{
-		int fit = fitDistanceToTargets(board, move.ivertexFrom_,
-		                               move.ivertexTo_, pteam);
+		double fit = fitDistanceToTargets(board, move.ivertexFrom_,
+		                                  move.ivertexTo_, pteam);
 		
 		#ifdef DEBUG
 		cout << "move from " << move.ivertexFrom_
@@ -228,13 +243,13 @@ void bestMove0MinFree(Board &board, int &ipawnToMove, int &ivertexDestination)
 	
 	// initialise best move
 	Move moveBest = moves[0];
-	int bestFit = fitDistanceToFreeTarget(board, moveBest.ivertexFrom_,
-	                                      moveBest.ivertexTo_, pteam);
+	double bestFit = fitDistanceToFreeTarget(board, moveBest.ivertexFrom_,
+	                                         moveBest.ivertexTo_, pteam);
 	
 	for (Move move : moves)
 	{
-		int fit = fitDistanceToFreeTarget(board, move.ivertexFrom_, 
-		                                  move.ivertexTo_, pteam);
+		double fit = fitDistanceToFreeTarget(board, move.ivertexFrom_, 
+		                                     move.ivertexTo_, pteam);
 		
 		#ifdef DEBUG
 		cout << "move from " << move.ivertexFrom_

@@ -1,3 +1,13 @@
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+//    Implementation file for rendering functions of the chinese          //
+//    checkers game.                                                      //
+//                                                                        //
+//    Author: Cédric Schoonen <cedric.schoonen1@gmail.com>                //
+//    February 2020                                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 #ifndef RENDERING
 #define RENDERING
 

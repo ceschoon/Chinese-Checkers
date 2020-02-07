@@ -6,19 +6,17 @@
 //    February 2020                                                       //
 //                                                                        //
 //    Developped under Ubuntu 18.04 with g++ 7.4.0 and sfml 2.4           //
-//    Compile with $ g++ -o chinese_checkers main.cpp \                   //
-//                   Algorithm.h Algorithm.cpp Board.h Board.cpp \        //
+//    Compile with $ g++ -o chinese_checkers main.cpp Board.h Board.cpp \ //
 //                   -lsfml-graphics -lsfml-window -lsfml-system          //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
-//	o	random forward algorithm
-//	o	current best move algorithm
-//	o	statistics (number of moves, advancement tracking, game record)
+//	o	better algorithms (see algorithm.cpp)
+//	o	more undos possible with vector of past boards
 
 /// current minor problems:
-//	o	the move function should be able to be called without record file
+//
 
 #include <iostream>
 #include <fstream>
@@ -33,8 +31,6 @@
 
 using namespace std;
 
-void checkMoves(ofstream &recordFile);
-
 int main()
 {
 	/////////////////////////////// Files //////////////////////////////////
@@ -45,7 +41,7 @@ int main()
 	
 	///////////////////////////// Game board ///////////////////////////////
 	
-	Hexagram board(4,3);
+	Hexagram board(6,3);
 	
 	/////////////////////////////// Window /////////////////////////////////
 	

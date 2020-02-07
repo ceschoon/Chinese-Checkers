@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+//    Header file for board-related classes of the chinese checkers game. //
+//                                                                        //
+//    Author: Cédric Schoonen <cedric.schoonen1@gmail.com>                //
+//    February 2020                                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 #ifndef BOARD
 #define BOARD
 
