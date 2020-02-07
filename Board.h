@@ -164,12 +164,17 @@ class Hexagram : public Board
 		}
 		
 		int getNumPawnsPerTeam() {return size_*(size_+1)/2;}
+		int getSize() {return size_;}
 		double getTotalSizeX() {return 2*sqrt(3)*size_;}
 		double getTotalSizeY() {return 2*sqrt(3)*size_;}
 		
 		// geometry (override of virtual board functions)
 		int distance(Vertex vertex1, Vertex vertex2);
 		bool aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3);
+		
+		// other geomery functions
+		void getBranchAngleAndTipPosition(int team, double &xTip,
+		                                  double &yTip, double &angle);
 		
 	protected:
 		// construction of graph (override of virtual board functions)

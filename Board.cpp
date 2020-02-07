@@ -198,6 +198,10 @@ void Board::computeNeighbours2()
 				int k = neighboursj1[n];
 				if (k==i) continue;
 				
+				#ifdef DEBUG
+				//cout << "i=" << i << " j=" << j << " k=" << k << endl;
+				#endif
+				
 				// alignment check
 				// if ok, store vertex k as second neighbour of i behind j
 				if (aligned(vertices_[i],vertices_[j],vertices_[k]))
@@ -385,6 +389,52 @@ void Hexagram::attributeTargetToTeams()
 
 
 
+void Hexagram::getBranchAngleAndTipPosition(int team, double &xTip,
+                                            double &yTip, double &angle)
+{
+	double d = size_*sqrt(3);
+	
+	if (nTeams_==1) 
+	{
+		angle = 0;
+		angle -= 90;
+		xTip = d * cos(PI/180*angle);
+		yTip = d * sin(PI/180*angle);
+	}
+	else if (nTeams_==2) 
+	{
+		angle = 180*team;
+		angle -= 90;
+		xTip = d * cos(PI/180*angle);
+		yTip = d * sin(PI/180*angle);
+	}
+	else if (nTeams_==3) 
+	{
+		angle = 120*team;
+		angle -= 90;
+		xTip = d * cos(PI/180*angle);
+		yTip = d * sin(PI/180*angle);
+	}
+	else if (nTeams_==4) 
+	{
+		if (team==0) angle = 0;
+		if (team==1) angle = 60;
+		if (team==2) angle = 180;
+		if (team==3) angle = 240;
+		angle -= 90;
+		xTip = d * cos(PI/180*angle);
+		yTip = d * sin(PI/180*angle);
+	}
+	else if (nTeams_==6) 
+	{
+		angle = 60*team;
+		angle -= 90;
+		xTip = d * cos(PI/180*angle);
+		yTip = d * sin(PI/180*angle);
+	}
+}
+
+
 
 void Board::placePawnsOnVertices()
 {
@@ -486,9 +536,9 @@ double angle(double x1, double y1, double x2, double y2)
 
 bool Hexagram::aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3)
 {
-	#ifdef DEBUG
-	//cout << "--- Computation of alignment in Hexagram ---" << endl;
-	#endif
+	/*#ifdef DEBUG
+	cout << "--- Computation of alignment in Hexagram ---" << endl;
+	#endif*/
 	
 	// positions of vertices
 	double x1 = vertex1.getX();
@@ -502,20 +552,25 @@ bool Hexagram::aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3)
 	double angle12 = angle(x1,y1,x2,y2);
 	double angle23 = angle(x2,y2,x3,y3);
 	
+	/*#ifdef DEBUG
+	cout << "angle12 = " << angle12 << endl;
+	cout << "angle23 = " << angle23 << endl;
+	#endif*/
+	
 	// check alignement
 	bool isAligned = false;
 	if (abs(angle12-angle23)<SMALL_NUMBER) isAligned = true;
 	if (abs(angle12-angle23+180)<SMALL_NUMBER) isAligned = true;
 	if (abs(angle12-angle23-180)<SMALL_NUMBER) isAligned = true; 
+	if (abs(angle12-angle23+360)<SMALL_NUMBER) isAligned = true;
+	if (abs(angle12-angle23-360)<SMALL_NUMBER) isAligned = true;
 	
-	/*
-	#ifdef DEBUG
+	/*#ifdef DEBUG
 	cout << "x1 = " << x1 << " y1 = " << y1 << endl;
 	cout << "x2 = " << x2 << " y2 = " << y2 << endl;
 	cout << "x3 = " << x3 << " y3 = " << y3 << endl;
 	cout << "isAligned = " << isAligned << endl;
-	#endif
-	*/
+	#endif*/
 	
 	return isAligned;
 }
@@ -886,6 +941,21 @@ void Board::print()
 	cout << "teamsOnTarget = ";
 	for (int team: teamsOnTarget2) cout << team << " ";
 	cout << endl;
+	
+	for (int ivertex=0; ivertex<vertices_.size(); ivertex++) 
+	{
+		// print first neighbours
+		cout << "first neighbours of vertex " << ivertex << " :  ";
+		Vertex vertex = vertices_[ivertex];
+		for (int ivertex1 : vertex.getNeighbours()) cout << ivertex1 << " ";
+		cout << endl;
+		
+		// print second neighbours
+		cout << "second neighbours of vertex " << ivertex << " : ";
+		vertex = vertices_[ivertex];
+		for (int ivertex2 : vertex.getNeighbours2()) cout << ivertex2 << " ";
+		cout << endl;
+	}
 }
 
 

@@ -244,9 +244,12 @@ void renderWinners(sf::RenderWindow &window, Hexagram board)
 		
 		// text position in window
 		double d = board.getTotalSizeX()/2;
-		double angle = PI/180*(360.0/nTeams*team+100);
-		double x = d * cos(angle);
-		double y = d * sin(angle);
+		double x,y,angle;
+		board.getBranchAngleAndTipPosition(team,x,y,angle);
+		angle += 180;
+		angle += 10;
+		x = d * cos(PI/180*angle);
+		y = d * sin(PI/180*angle);
 		text.setPosition(x,y);
 		
 		// color according to team
@@ -292,6 +295,36 @@ void renderAvailableMoves(sf::RenderWindow &window, Board board,
 		
 		vertexShape.setPosition(sf::Vector2f(x,y));
 		window.draw(vertexShape);
+	}
+}
+
+
+
+void renderHomes(sf::RenderWindow &window, Hexagram board)
+{
+	#ifdef DEBUG_RENDERING
+	cout << "--- Rendering homes ---" << endl;
+	#endif
+	
+	// home shape and colour
+	double size = double(board.getSize())/sqrt(3);
+	sf::CircleShape triangleShape(size,3);
+	triangleShape.setOrigin(size,0);
+	
+	for (int team=0; team<board.getNTeams(); team++)
+	{
+		// home position in window
+		double x,y,angle;
+		board.getBranchAngleAndTipPosition(team,x,y,angle);
+		triangleShape.setPosition(sf::Vector2f(x,y));
+		triangleShape.setRotation(angle+90);
+		
+		// colour according to team
+		sf::Color colorTeam = colorOfTeam(team);
+		colorTeam.a = 48; // make it a bit transparent
+		triangleShape.setFillColor(colorTeam);
+		
+		window.draw(triangleShape);
 	}
 }
 

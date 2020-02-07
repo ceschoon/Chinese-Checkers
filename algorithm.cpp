@@ -184,6 +184,10 @@ void bestMove0MinSum(Board &board, int &ipawnToMove, int &ivertexDestination)
 			bestFit = fit;
 		}
 		// to introduce a bit of randomness
+		// TODO: uniform density because first moves in the list are 
+		//       less probable with current scheme, which leads to a
+		//       struggle at the end and a bias towards players that
+		//       have the favorable vertex order.
 		else if (fit == bestFit && dist01(gen)<0.5)
 		{
 			moveBest = move;
@@ -244,6 +248,10 @@ void bestMove0MinFree(Board &board, int &ipawnToMove, int &ivertexDestination)
 			bestFit = fit;
 		}
 		// to introduce a bit of randomness
+		// TODO: uniform density because first moves in the list are 
+		//       less probable with current scheme, which leads to a
+		//       struggle at the end and a bias towards players that
+		//       have the favorable vertex order.
 		else if (fit == bestFit && dist01(gen)<0.5)
 		{
 			moveBest = move;
