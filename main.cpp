@@ -263,6 +263,98 @@ int main()
 					pawnSelected = -1;
 				}
 			}
+			
+			
+			
+			// replay from file when key 'R' is pressed
+			if (event.type == sf::Event::KeyPressed && 
+				event.key.code == sf::Keyboard::R && !gameEnded)
+			{
+				if (recordInFile)
+				{
+					string line = "";
+					getline(recordInFile,line);
+					
+					if (line.substr(0,4) == "Move")
+					{
+						#ifdef DEBUG
+						cout << "--- Replay move ---" << endl;
+						cout << "line = \"" << line << "\"" << endl;
+						#endif
+						
+						// string is formatted as "Move from vertex <num> to <num>"
+						// find position of the first number in string
+						int posFrom = 0;
+						for (int i=4; i<line.size(); i++)
+							if (line[i-4] == 't' && line[i-3] == 'e' &&
+								line[i-2] == 'x' && line[i-1] == ' ') posFrom = i;
+						// find position of the second number in string
+						int posTo = 0;
+						for (int i=posFrom; i<line.size(); i++)
+							if (line[i-4] == ' ' && line[i-3] == 't' &&
+								line[i-2] == 'o' && line[i-1] == ' ') posTo = i;
+						
+						// identify move
+						int ivertexFrom = stoi(line.substr(posFrom,posTo-4-posFrom));
+						int ivertexTo = stoi(line.substr(posTo,line.size()-posTo));
+						int ipawn = board.getPawnFromVertex(ivertexFrom);
+						
+						#ifdef DEBUG
+						cout << "identified move from vertex " << ivertexFrom 
+							 << " to " << ivertexTo << endl;
+						#endif
+						
+						// save the board before making changes
+						Hexagram boardSave2 = board;
+						
+						// place selected pawn
+						int status = board.move(ipawn, ivertexTo, recordFile);
+						if (status == 0) 
+						{
+							counterMoves ++;
+							boardSave = boardSave2;
+							undoAvailable = true;
+							
+							#ifdef DEBUG
+							cout << "*** Board print ***" << endl;
+							board.print();
+							cout << "*******************" << endl;
+							#endif
+						}
+						else 
+						{
+							cout << "Replayed move is not valid, error code "
+								 << status << endl;
+						}
+					}
+					else if (line == "Undo")
+					{
+						#ifdef DEBUG
+						cout << "--- Replay undo ---" << endl;
+						cout << "line = \"" << line << "\"" << endl;
+						#endif
+						
+						if (undoAvailable)
+						{
+							board = boardSave;
+							counterMoves --;
+							undoAvailable = false;
+							recordFile << "Undo" << endl;
+						}
+						else 
+						{
+							cout << "Replayed undo not possible" << endl;
+						}
+					}
+					else
+					{
+						#ifdef DEBUG
+						cout << "--- Replay line not recognised ---" << endl;
+						cout << "line = \"" << line << "\"" << endl;
+						#endif
+					}
+				}
+			}
 		}
 		
 		/////////////////////////// Rendering //////////////////////////////
@@ -287,96 +379,6 @@ int main()
 		renderWinners(window,board);
 		
 		window.display();
-		
-		//////////////////////////// Replay ////////////////////////////////
-		
-		if (recordInFile)
-		{
-			string line = "";
-			getline(recordInFile,line);
-			
-			if (line.substr(0,4) == "Move")
-			{
-				#ifdef DEBUG
-				cout << "--- Replay move ---" << endl;
-				cout << "line = \"" << line << "\"" << endl;
-				#endif
-				
-				// string is formatted as "Move from vertex <num> to <num>"
-				// find position of the first number in string
-				int posFrom = 0;
-				for (int i=4; i<line.size(); i++)
-					if (line[i-4] == 't' && line[i-3] == 'e' &&
-					    line[i-2] == 'x' && line[i-1] == ' ') posFrom = i;
-				// find position of the second number in string
-				int posTo = 0;
-				for (int i=posFrom; i<line.size(); i++)
-					if (line[i-4] == ' ' && line[i-3] == 't' &&
-					    line[i-2] == 'o' && line[i-1] == ' ') posTo = i;
-				
-				// identify move
-				int ivertexFrom = stoi(line.substr(posFrom,posTo-4-posFrom));
-				int ivertexTo = stoi(line.substr(posTo,line.size()-posTo));
-				int ipawn = board.getPawnFromVertex(ivertexFrom);
-				
-				#ifdef DEBUG
-				cout << "identified move from vertex " << ivertexFrom 
-				     << " to " << ivertexTo << endl;
-				#endif
-				
-				// save the board before making changes
-				Hexagram boardSave2 = board;
-				
-				// place selected pawn
-				int status = board.move(ipawn, ivertexTo, recordFile);
-				if (status == 0) 
-				{
-					counterMoves ++;
-					boardSave = boardSave2;
-					undoAvailable = true;
-					
-					#ifdef DEBUG
-					cout << "*** Board print ***" << endl;
-					board.print();
-					cout << "*******************" << endl;
-					#endif
-				}
-				else 
-				{
-					cout << "Replayed move is not valid, error code "
-					     << status << endl;
-				}
-			}
-			else if (line == "Undo")
-			{
-				#ifdef DEBUG
-				cout << "--- Replay undo ---" << endl;
-				cout << "line = \"" << line << "\"" << endl;
-				#endif
-				
-				if (undoAvailable)
-				{
-					board = boardSave;
-					counterMoves --;
-					undoAvailable = false;
-					recordFile << "Undo" << endl;
-				}
-				else 
-				{
-					cout << "Replayed undo not possible" << endl;
-				}
-			}
-			else
-			{
-				#ifdef DEBUG
-				cout << "--- Replay line not recognised ---" << endl;
-				cout << "line = \"" << line << "\"" << endl;
-				#endif
-			}
-			
-			// pause to slow replay
-			//this_thread::sleep_for(std::chrono::milliseconds(1000));
-		}
 		
 		///////////////////////////// Misc. ////////////////////////////////
 		
