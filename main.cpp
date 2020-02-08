@@ -13,6 +13,7 @@
 
 /// next on the todo list
 //	o	better algorithms (see algorithm.cpp)
+//	o	automatic games between algorithms
 //	o	more undos possible with vector of past boards
 
 /// current minor problems:
@@ -41,7 +42,7 @@ int main()
 	
 	///////////////////////////// Game board ///////////////////////////////
 	
-	Hexagram board(6,3);
+	Hexagram board(4,3);
 	
 	/////////////////////////////// Window /////////////////////////////////
 	

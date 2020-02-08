@@ -94,6 +94,7 @@ class Board
 		vector<int> getHomeOfTeam(int team) {return homes_[team];}
 		vector<int> getTargetOfTeam(int team) {return targets_[team];}
 		vector<int> getWinningOrder() {return winningOrder_;}
+		vector<int> getBestTargets() {return targetVertex_;}
 		vector<int> teamsOnTarget();
 		
 		// geometry
@@ -140,6 +141,7 @@ class Board
 		vector<vector<int>> homes_;   // list of home vertices for each team
 		vector<vector<int>> targets_;
 		vector<int> winningOrder_;
+		vector<int> targetVertex_;    // if the notion exists for the board
 };
 
 
@@ -165,6 +167,7 @@ class Hexagram : public Board
 			attributeHomeToTeams();
 			attributeTargetToTeams();
 			placePawnsOnVertices();
+			computeTargetVertices();
 			
 			#ifdef DEBUG
 			cout << "== Checking pawn placement in Hexagram class constructor ==" << endl;
@@ -182,6 +185,7 @@ class Hexagram : public Board
 		bool aligned(Vertex vertex1, Vertex vertex2, Vertex vertex3);
 		
 		// other geomery functions
+		void computeTargetVertices();
 		void getBranchAngleAndTipPosition(int team, double &xTip,
 		                                  double &yTip, double &angle);
 		

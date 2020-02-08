@@ -446,6 +446,36 @@ void Hexagram::getBranchAngleAndTipPosition(int team, double &xTip,
 
 
 
+// For the hexagram, the target vertices are those the further from (0,0)
+void Hexagram::computeTargetVertices()
+{
+	targetVertex_ = vector<int>(nTeams_,-1);
+	
+	for (int team=0; team<nTeams_; team++)
+	{
+		double d2Max = 0;
+		int ivertexMax = -1;
+		
+		for (int i=0; i<targets_[team].size(); i++)
+		{
+			int ivertex = targets_[team][i];
+			double x = vertices_[ivertex].getX();
+			double y = vertices_[ivertex].getY();
+			double d2 = x*x+y*y;
+			
+			if (d2>d2Max)
+			{
+				d2Max = d2;
+				ivertexMax = ivertex;
+			}
+		}
+		
+		targetVertex_[team] = ivertexMax;
+	}
+}
+
+
+
 void Board::placePawnsOnVertices()
 {
 	#ifdef DEBUG

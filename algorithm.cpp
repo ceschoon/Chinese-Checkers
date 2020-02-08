@@ -33,26 +33,7 @@ int seed = true_gen();
 default_random_engine gen(seed);
 uniform_real_distribution<double> dist01(0,1);
 
-// Algorithms
-void randomMove(Board &board, int &ipawnToMove, int &ivertexDestination);
-void bestMove0MinSum(Board &board, int &ipawnToMove, int &ivertexDestination);
-void bestMove0MinFree(Board &board, int &ipawnToMove, int &ivertexDestination);
-
-
-// generic algorithm function used to redirect to other ones
-void algorithm(Board &board, int &ipawnToMove, int &ivertexDestination)
-{
-	//randomMove(board, ipawnToMove, ivertexDestination);
-	//bestMove0MinSum(board, ipawnToMove, ivertexDestination);
-	bestMove0MinFree(board, ipawnToMove, ivertexDestination);
-}
-
-
-
-//////////////////////////// Implementations ///////////////////////////////
-
-
-
+// class for typical move
 class Move
 {
 	public: 
@@ -61,7 +42,36 @@ class Move
 		
 		int ivertexFrom_;
 		int ivertexTo_;
+		double weight_;
 };
+
+// Algorithms (basic)
+void randomMove(Board&, int&, int&);
+void bestMove0MinSum(Board&, int&, int&);
+void bestMove0MinFree(Board&, int&, int&);
+
+// Algorithms (hamiltonian family)
+void algorithmHamiltonian(Board &board, int &ipawnToMove, int &ivertexDestination);
+const double temperature = 0.3;
+double hamiltonianTarget(Board&, Move);
+double hamiltonian(Board &board, Move move)
+{
+	return hamiltonianTarget(board, move);
+}
+
+// generic algorithm function used to redirect to other ones
+void algorithm(Board &board, int &ipawnToMove, int &ivertexDestination)
+{
+	//randomMove(board, ipawnToMove, ivertexDestination);
+	//bestMove0MinSum(board, ipawnToMove, ivertexDestination);
+	//bestMove0MinFree(board, ipawnToMove, ivertexDestination);
+	algorithmHamiltonian(board, ipawnToMove, ivertexDestination);
+}
+
+
+
+//////////////////////////// Implementations ///////////////////////////////
+
 
 
 
@@ -278,6 +288,99 @@ void bestMove0MinFree(Board &board, int &ipawnToMove, int &ivertexDestination)
 	ipawnToMove = board.getPawnFromVertex(moveBest.ivertexFrom_);
 	ivertexDestination = moveBest.ivertexTo_;
 }
+
+
+
+
+
+
+//////////////////////////// Hamiltonian Family ////////////////////////////
+
+
+double hamiltonianTarget(Board& board, Move move)
+{
+	vector<Vertex> vertices = board.getVertices();
+	vector<int> targets = board.getBestTargets();
+	int pteam = board.getPlayingTeam();
+	
+	// this is a method for convex graphs, check if it applies this one
+	assert(targets[pteam]>=0);
+	
+	// distances to best target
+	int distance1 = board.distance(vertices[move.ivertexFrom_], 
+	                               vertices[targets[pteam]]);
+	int distance2 = board.distance(vertices[move.ivertexTo_], 
+	                               vertices[targets[pteam]]);
+	
+	double energy = distance2-distance1;
+	
+	return energy;
+}
+
+
+
+
+void algorithmHamiltonian(Board &board, int &ipawnToMove, int &ivertexDestination)
+{
+	#ifdef DEBUG
+	cout << "--- generic hamiltonian algorithm ---" << endl;
+	#endif
+	
+	vector<Pawn> pawns = board.getPawns();
+	vector<Move> moves;
+	int pteam = board.getPlayingTeam();
+	
+	// compute available moves
+	for (int ipawn=0; ipawn<pawns.size(); ipawn++)
+	{
+		if (pawns[ipawn].getTeam() != pteam) continue;
+		
+		int ivertexFrom = board.getVertexFromPawn(ipawn);
+		
+		for (int ivertexTo: board.availableMovesDirect(ivertexFrom))
+			moves.push_back(Move(ivertexFrom, ivertexTo));
+		for (int ivertexTo: board.availableMovesHopping(ivertexFrom))
+			moves.push_back(Move(ivertexFrom, ivertexTo));
+	}
+	
+	// compute weight of each move
+	double sumWeights = 0;
+	for (int i=0; i<moves.size(); i++)
+	{
+		double energy = hamiltonian(board, moves[i]);
+		moves[i].weight_ = exp(-energy/temperature);
+		sumWeights += moves[i].weight_;
+		
+		#ifdef DEBUG
+		cout << "move from " << moves[i].ivertexFrom_
+		     << " to " << moves[i].ivertexTo_ << " : "
+		     << "energy = " << energy 
+		     << " weight = " << moves[i].weight_ << endl;
+		#endif
+	}
+	
+	// select move to perform
+	double ran = dist01(gen);
+	double cumulatedProba = 0;
+	for (Move move : moves)
+	{
+		cumulatedProba += move.weight_/sumWeights;
+		if (ran < cumulatedProba) 
+		{
+			ipawnToMove = board.getPawnFromVertex(move.ivertexFrom_);
+			ivertexDestination = move.ivertexTo_;
+			
+			#ifdef DEBUG
+			cout << "selected move from " << move.ivertexFrom_
+				 << " to " << move.ivertexTo_ << endl;
+			#endif
+			
+			break;
+		}
+	}
+}
+
+
 
 
 
