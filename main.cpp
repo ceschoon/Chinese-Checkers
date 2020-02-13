@@ -9,12 +9,23 @@
 //    Compile with $ g++ -o chinese_checkers main.cpp Board.h Board.cpp \ //
 //                   -lsfml-graphics -lsfml-window -lsfml-system          //
 //                                                                        //
+//    Controls: You can select a pawn by left-clicking on it and place    //
+//              it by releasing the mouse above the destination vertex.   //
+//              Press "a" to play with the current algorithm in use.      //
+//              Press "z" to undo a move. Press "m" to toggle the         //
+//              display of available moves for the selected pawn.         //
+//              Press "r" to replay a move from the input file "data/     //
+//              record_in.dat". A record of each game is automatically    //
+//              written to the file "data/record.dat".                    //
+//                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
 //	o	better algorithms (see algorithm.cpp)
 //	o	automatic games between algorithms
-//	o	more undos possible with vector of past boards
+//	o	proper tests for the algorithms using different scenarios and 
+//		a good statistical analysis
+//		->	game alone, vs itself (6 copies), vs other algorithms
 
 /// current minor problems:
 //
@@ -42,7 +53,7 @@ int main()
 	
 	///////////////////////////// Game board ///////////////////////////////
 	
-	Hexagram board(4,3);
+	Hexagram board(6,3);
 	
 	/////////////////////////////// Window /////////////////////////////////
 	
@@ -64,8 +75,8 @@ int main()
 	int counterMoves = 0;
 	bool showAvailableMoves = false;
 	
-	Hexagram boardSave = board;
-	bool undoAvailable = false;
+	// board save at each move
+	vector<Hexagram> boardSaves(1,board);
 	
 	// seed from algorithm.cpp
 	cout << "seed = " << seed << endl;
@@ -86,11 +97,13 @@ int main()
 			if (event.type == sf::Event::KeyPressed && 
 				event.key.code == sf::Keyboard::Z && !gameEnded)
 			{
-				if (undoAvailable)
+				if (boardSaves.size()>0)
 				{
-					board = boardSave;
+					// reset to last board saved
+					board = boardSaves.back();
+					boardSaves.pop_back();
+					
 					counterMoves --;
-					undoAvailable = false;
 					recordFile << "Undo" << endl;
 				}
 			}
@@ -107,7 +120,7 @@ int main()
 				event.key.code == sf::Keyboard::A && !gameEnded)
 			{
 				// save the board before making changes
-				Hexagram boardSave2 = board;
+				Hexagram boardSave = board;
 				
 				// decide move to perform
 				// we copy the board to prevent the algorithm from making
@@ -122,8 +135,7 @@ int main()
 				if (status == 0) 
 				{
 					counterMoves ++;
-					boardSave = boardSave2;
-					undoAvailable = true;
+					boardSaves.push_back(boardSave);
 					
 					#ifdef DEBUG
 					cout << "*** Board print ***" << endl;
@@ -234,15 +246,14 @@ int main()
 					#endif
 					
 					// save the board before making changes
-					Hexagram boardSave2 = board;
+					Hexagram boardSave = board;
 					
 					// place selected pawn
 					int status = board.move(pawnSelected, ivertexMin, recordFile);
 					if (status == 0) 
 					{
 						counterMoves ++;
-						boardSave = boardSave2;
-						undoAvailable = true;
+						boardSaves.push_back(boardSave);
 						
 						#ifdef DEBUG
 						cout << "*** Board print ***" << endl;
@@ -302,15 +313,14 @@ int main()
 						#endif
 						
 						// save the board before making changes
-						Hexagram boardSave2 = board;
+						Hexagram boardSave = board;
 						
 						// place selected pawn
 						int status = board.move(ipawn, ivertexTo, recordFile);
 						if (status == 0) 
 						{
 							counterMoves ++;
-							boardSave = boardSave2;
-							undoAvailable = true;
+							boardSaves.push_back(boardSave);
 							
 							#ifdef DEBUG
 							cout << "*** Board print ***" << endl;
@@ -320,7 +330,7 @@ int main()
 						}
 						else 
 						{
-							cout << "Replayed move is not valid, error code "
+							cout << "Move to replay is not valid, error code "
 								 << status << endl;
 						}
 					}
@@ -331,16 +341,18 @@ int main()
 						cout << "line = \"" << line << "\"" << endl;
 						#endif
 						
-						if (undoAvailable)
+						if (boardSaves.size()>0)
 						{
-							board = boardSave;
+							// reset to last board saved
+							board = boardSaves.back();
+							boardSaves.pop_back();
+							
 							counterMoves --;
-							undoAvailable = false;
 							recordFile << "Undo" << endl;
 						}
 						else 
 						{
-							cout << "Replayed undo not possible" << endl;
+							cout << "Impossible to replay undo" << endl;
 						}
 					}
 					else
