@@ -21,11 +21,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 /// next on the todo list
+//	o	compilation for windows
+//	o	report on how the game can be played and implementation details
 //	o	better algorithms (see algorithm.cpp)
-//	o	automatic games between algorithms
-//	o	proper tests for the algorithms using different scenarios and 
-//		a good statistical analysis
-//		->	game alone, vs itself (6 copies), vs other algorithms
 
 /// current minor problems:
 //

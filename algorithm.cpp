@@ -52,7 +52,7 @@ void bestMove0MinFree(Board&, int&, int&);
 
 // Algorithms (hamiltonian family)
 void algorithmHamiltonian(Board &board, int &ipawnToMove, int &ivertexDestination);
-const double temperature = 0.3;
+double temperature = 0.1;
 double hamiltonianTarget(Board&, Move);
 double hamiltonian(Board &board, Move move)
 {
