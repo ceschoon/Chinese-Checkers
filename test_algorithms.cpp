@@ -39,9 +39,10 @@ int main()
 {
 	/////////////////////////////// Files //////////////////////////////////
 	
-	int sysresult = system("mkdir -p data");
+	int sysresult = system("mkdir -p data analysis");
 	ofstream recordFile("data/record.dat");
 	ifstream recordInFile("data/record_in.dat");
+	ofstream distMovesFile("analysis/distMoves.dat");
 	
 	///////////////////////////// Parameters ///////////////////////////////
 	
@@ -50,7 +51,7 @@ int main()
 	int boardSize = 3;
 	
 	// analysis
-	int numGames = 100;
+	int numGames = 1000;
 	int maxNumMoves = 1000;
 	
 	////////////////////////////// Game loop ///////////////////////////////
@@ -90,13 +91,13 @@ int main()
 			// decide move to perform using an algorithm specific to the team
 			if (pteam==0)
 			{
-				temperature = 0.1;
+				temperature = 0.3;
 				algorithmHamiltonian(boardCopy, ipawnToMove, 
 				                     ivertexDestination);
 			}
 			else
 			{
-				temperature = 0.1;
+				temperature = 0.3;
 				algorithmHamiltonian(boardCopy, ipawnToMove, 
 				                     ivertexDestination);
 			}
@@ -122,7 +123,8 @@ int main()
 		// after game analysis
 		numMoves[iGame] = counterMoves;
 		
-		cout << "completed game number " << iGame << endl;
+		if (iGame%(numGames/10)==0)
+			cout << "completed games up to number " << iGame << endl;
 	}
 	
 	//////////////////////// Statistical analysis //////////////////////////
@@ -132,11 +134,11 @@ int main()
 	
 	///// filter valid games /////
 	
-	cout << endl;
-	cout << "Number of played games is " << numGames << endl;
-	
 	int numGames0 = numGames; numGames = 0;
 	vector<int> numMoves0 = numMoves; numMoves.clear();
+	
+	cout << endl;
+	cout << "Number of played games is " << numGames0 << endl;
 	
 	for (int i=0; i<numGames0; i++)
 	{
@@ -148,15 +150,42 @@ int main()
 	}
 	
 	cout << "Number of valid games is " << numGames << endl;
+	cout << "Fraction of invalid games is " << 1-double(numGames)/numGames0 << endl;
 	
 	///// number of moves (distribution) /////
 	
-	cout << endl;
-	cout << "Distribution of the number of moves per game: " << endl;
+	int maxNMoves = 0;
+	for (int i=0; i<numMoves.size(); i++) 
+		if (numMoves[i]>maxNMoves) maxNMoves = numMoves[i];
 	
-	for (int i=0; i<numMoves.size(); i++)
-		cout << numMoves[i] << " ";
-	cout << endl;
+	vector<int> frequencies(maxNMoves+1,0);
+	for (int i=0; i<numMoves.size(); i++) frequencies[numMoves[i]]++;
+	
+	distMovesFile << "# numMoves  frequency" << endl;
+	for (int i=0; i<maxNMoves; i++) 
+		distMovesFile << i << " " << frequencies[i] << endl;
+	
+	///// gnuplot scipt to plot the distribution /////
+	
+	ofstream plotFile;
+	plotFile.open("analysis/plot_distMoves");
+	
+	plotFile << "set term svg enhanced mouse #size 600,500" << endl;
+	plotFile << "set output 'distMoves.svg'" << endl;
+	plotFile << endl;
+	plotFile << "set title \"Number of moves to finish the game\" font \",20\"" << endl;
+	plotFile << "set xlabel \"number of moves\" font \",20\"" << endl;
+	plotFile << "set ylabel \"number of games\" font \",20\"" << endl;
+	plotFile << endl;
+	plotFile << "set key off" << endl;
+	plotFile << endl;
+	
+	plotFile << "set style histogram" << endl;
+	plotFile << "set style fill solid 0.5" << endl;
+	plotFile << "plot \"distMoves.dat\" smooth freq with boxes" << endl;
+	
+	plotFile.close();
+	sysresult = system("cd analysis; gnuplot plot_distMoves");
 	
 	///// number of moves (avg and err) /////
 	

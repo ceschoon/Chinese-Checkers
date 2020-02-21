@@ -16,6 +16,7 @@ then
 			-lsfml-graphics -lsfml-window -lsfml-system
 		time ./tests > out.txt 2> out2.txt
 		cat out.txt
+		cat out2.txt
 	fi
 else
 	g++ -o chinese_checkers main.cpp Board.h Board.cpp \
