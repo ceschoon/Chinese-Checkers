@@ -13,9 +13,12 @@ then
 	if [ $1 == "tests" ]
 	then
 		mkdir -p analysis
+		git log | head > analysis/code_version.txt
+		
 		g++ -O3 -o tests test_algorithms.cpp Board.h Board.cpp \
 			-lsfml-graphics -lsfml-window -lsfml-system
 		time ./tests > analysis/out.txt 2> analysis/out2.txt
+		
 		cat analysis/out.txt
 		cat analysis/out2.txt
 	fi
