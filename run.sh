@@ -12,11 +12,12 @@ then
 	
 	if [ $1 == "tests" ]
 	then
+		mkdir -p analysis
 		g++ -O3 -o tests test_algorithms.cpp Board.h Board.cpp \
 			-lsfml-graphics -lsfml-window -lsfml-system
-		time ./tests > out.txt 2> out2.txt
-		cat out.txt
-		cat out2.txt
+		time ./tests > analysis/out.txt 2> analysis/out2.txt
+		cat analysis/out.txt
+		cat analysis/out2.txt
 	fi
 else
 	g++ -o chinese_checkers main.cpp Board.h Board.cpp \

@@ -54,6 +54,15 @@ int main()
 	int numGames = 1000;
 	int maxNumMoves = 1000;
 	
+	// report
+	cout << endl;
+	cout << "=========== Parameters ============" << endl;
+	cout << endl;
+	cout << "numTeams = " << numTeams << endl;
+	cout << "boardSize = " << boardSize << endl;
+	cout << "numGames = " << numGames << endl;
+	cout << "maxNumMoves = " << maxNumMoves << endl;
+	
 	////////////////////////////// Game loop ///////////////////////////////
 	
 	cout << endl;
@@ -191,7 +200,7 @@ int main()
 	
 	double numMoves_avg = 0;
 	double numMoves_std = 0;
-	double numMoves_err = 0;
+	double numMoves_avgerr = 0;
 	
 	for (int i=0; i<numMoves.size(); i++)
 		numMoves_avg += double(numMoves[i])/numGames;
@@ -200,15 +209,45 @@ int main()
 	for (int i=0; i<numMoves.size(); i++)
 		numMoves_std += (numMoves[i]-numMoves_avg)*(numMoves[i]-numMoves_avg);
 	numMoves_std = sqrt(numMoves_std/(numGames-1));
-	numMoves_err = numMoves_std / sqrt(numGames);
+	numMoves_avgerr = numMoves_std / sqrt(numGames);
 	
 	cout << endl;
 	cout << "Average number of moves per game is " << numMoves_avg
-	     << " +- " << numMoves_err << endl;
+	     << " +- " << numMoves_avgerr << endl;
+	
+	///// number of moves (median) ////
+	
+	vector<int> cumulFrequencies(maxNMoves+1,0);
+	for (int i=0; i<frequencies.size(); i++)
+		for (int j=i; j<cumulFrequencies.size(); j++)
+			cumulFrequencies[j] += frequencies[i];
+	
+	int numMoves_median = 0;
+	for (int i=0; i<cumulFrequencies.size(); i++)
+		if (cumulFrequencies[i]<0.5*numGames) numMoves_median = i;
+		else break;
+	
+	cout << "Median number of moves per game is " << numMoves_median << endl;
+	
+	///// number of moves (05th and 95th percentiles) ////
+	
+	int numMoves_percentile05 = 0;
+	for (int i=0; i<cumulFrequencies.size(); i++)
+		if (cumulFrequencies[i]<0.05*numGames) numMoves_percentile05 = i;
+		else break;
+	
+	cout << "05th percentile for the number of moves per game is " 
+	     << numMoves_percentile05 << endl;
+	
+	int numMoves_percentile95 = 0;
+	for (int i=0; i<cumulFrequencies.size(); i++)
+		if (cumulFrequencies[i]<0.95*numGames) numMoves_percentile95 = i;
+		else break;
+	
+	cout << "95th percentile for the number of moves per game is " 
+	     << numMoves_percentile95 << endl;
 	
 	/////   /////
-	
-	cout << endl;
 	
 	////////////////////////////////////////////////////////////////////////
 	
