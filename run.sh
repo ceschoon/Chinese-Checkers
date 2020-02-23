@@ -17,7 +17,7 @@ then
 		
 		g++ -O3 -o tests test_algorithms.cpp Board.h Board.cpp \
 			-lsfml-graphics -lsfml-window -lsfml-system
-		time ./tests > analysis/out.txt 2> analysis/out2.txt
+		time ./tests > analysis/out.txt 2> analysis/out2.txt &
 		
 		cat analysis/out.txt
 		cat analysis/out2.txt

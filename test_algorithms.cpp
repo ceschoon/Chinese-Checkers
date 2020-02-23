@@ -62,6 +62,8 @@ int main()
 	cout << "boardSize = " << boardSize << endl;
 	cout << "numGames = " << numGames << endl;
 	cout << "maxNumMoves = " << maxNumMoves << endl;
+	cout << endl;
+	cout << "Algorithm: Hamiltonian \"Target\" with temperature=0.3" << endl;
 	
 	////////////////////////////// Game loop ///////////////////////////////
 	
